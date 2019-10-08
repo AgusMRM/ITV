@@ -1,0 +1,49 @@
+program SF
+       use modulos
+       use OMP_lib 
+       implicit none
+       integer,parameter :: VOID = 1198
+       integer :: SNAPSHOT,c1,c2,k,particula     
+       real :: d,xbox,ybox,zbox,x,y,z,rv
+       character(len=200) :: snumber
+        xbox=411.217
+        ybox=162.1655
+        zbox=453.0553 
+        open(13,file='voids_new.dat')
+        do i=1,VOID-1
+        read(13,*)
+        enddo
+        read(13,*) rv,x,y,z
+        x=x-xbox+250
+        y=y-ybox+250
+        z=z-zbox+250
+        !$OMP PARRALLEL DEFAULT(NONE) &
+        !$OMP PRIVATE(   ) &
+        !$OMP SHARED (   ) 
+        !$OMP DO SCHEDULE(DYNAMIC)
+       open(10,file='df_raster.dat',status='unknown')
+       open(11,file='df_recorrido.dat',status='unknown')
+       do i=1,1
+       read(10,*) particula
+        do j=30,50
+        c1=0
+        c2=0
+        SNAPSHOT=j
+        write(*,*) snapshot
+        write(snumber,'(I3)') SNAPSHOT
+        call reader(snumber)
+                do k=1,nall(0)
+                if (id(k) == particula) then 
+                        write(11,*) u(k),dens(k),ne(k)
+                        cycle
+                endif
+                enddo        
+        deallocate(pos,vel,id,idch,idgn,mass,u,dens,ne)
+        enddo
+       enddo
+        !$OMP ENDDO
+        !$OMP BARRIER
+        !$OMP ENDPARALLEL   
+   close(10) 
+   close(11) 
+endprogram 
