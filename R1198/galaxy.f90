@@ -9,6 +9,7 @@
 program first
         use modulos
         implicit none
+        integer,parameter:: id_0=52087
         integer,parameter::halos=87780-19, box=500, cell=125,halonumber=2896
         integer :: ngas,ndm,ntid,nst
         integer :: k,m,l,p,particles,part_gs,part_dm,part_st,part_td
@@ -44,12 +45,6 @@ program first
         !mas=0
         mas=mass(1)
 
-print*, mas
-        do i=1,nall(0)
-                if (mass(i) < mas) mas=mass(i)
-        enddo
-        !print*, mass(2), mas/real(nall(0))
-print*, mas
   !-----------------------------------------------------------------------------
         ngas=nall(0)
         ndm=nall(1)
@@ -111,17 +106,6 @@ print*, mas
 !---------------------------------------------------------------------------------------------------        
         rmax = 0
 
-        open(7,file='halos_R1198.dat',status='unknown')  !saltear 19 filas
-        do i=1,19
-                read(7,*)
-        enddo
-        print*, 'empiezo a leer halos'
-        do i = 1, halos
-                read(7,*) id_hl(i), np_hl(i), nn, nn, rvir(i), nn, nn, nn,pos_hl(1,i), pos_hl(2,i), pos_hl(3,i), &
-                                vel_hl(1,i), vel_hl(2,i), vel_hl(3,i),nn,nn,nn,nn,spin(i)
-                if (rvir(i) >= rmax) rmax = rvir(i)
-        enddo 
-        close(7)
 write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
         abin    = real(box)/real(cell)
       ! stop 
@@ -137,7 +121,7 @@ write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
         tot_st  = 0
         head_st = 0
         link_st = 0
-      !  write(*,*) 'LiNKEANDO DM'
+       write(*,*) 'LiNKEANDO DM'
         call linkedlist(ndm,abin,cell,pos_dm,head_dm,tot_dm,link_dm)
         write(*,*) 'LiNKEANDO GAS'
         call linkedlist(ngas,abin,cell,pos_gs,head_gs,tot_gs,link_gs)
@@ -149,28 +133,27 @@ write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
 !-------------------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------------------
 write(*,*) 'COMENZANDO CALCULOS'
-maxspin=-99
 !open(10,file='propiedades_halos.dat',status='unknown')
-        do i=1,halos                            
-       x=         pos_hl(1,i)
-       y=         pos_hl(2,i)
-       z=         pos_hl(3,i)
-                velx = vel_hl(1,i)
-                vely = vel_hl(2,i)
-                velz = vel_hl(3,i)
+!        do i=1,halos                            
+!       x=         pos_hl(1,i)
+!       y=         pos_hl(2,i)
+!       z=         pos_hl(3,i)
+ !               velx = vel_hl(1,i)
+ !               vely = vel_hl(2,i)
+ !               velz = vel_hl(3,i)
 
-                bx = int(x/abin) + 1
-                by = int(y/abin) + 1
-                bz = int(z/abin) + 1
+ !               bx = int(x/abin) + 1
+ !               by = int(y/abin) + 1
+ !               bz = int(z/abin) + 1
              !------------------------------------   
-                part_st = 0 
-                call cuentasST(x,y,z,velx,vely,velz,bx,by,bz,part_st,nst,cell,tot_st, &
-                               head_st,pos_st,vel_st,link_st,rvir(i),mass_st,masa_st,L_st)
-            !    if (part_st > 1000) print*, part_st, i
-                if (part_st >500 .and. spin(i) > .4) maxspin=spin(i); maxspin_id = i!; print*, i
+ !               part_st = 0 
+ !               call cuentasST(x,y,z,velx,vely,velz,bx,by,bz,part_st,nst,cell,tot_st, &
+ !                              head_st,pos_st,vel_st,link_st,rvir(i),mass_st,masa_st,L_st)
+ !           !    if (part_st > 1000) print*, part_st, i
+  !              if (part_st >500 .and. spin(i) > .4) maxspin=spin(i); maxspin_id = i!; print*, i
     !   enddo
-       enddo
-       print*, maxspin
+  !     enddo
+  !     print*, maxspin
 open(10,file='galaxy_st.dat',status='unknown')
 open(11,file='galaxy_gs.dat',status='unknown')
 open(12,file='galaxy_dm.dat',status='unknown')
@@ -179,10 +162,22 @@ open(12,file='galaxy_dm.dat',status='unknown')
       part_dm = 0
     !  i =84195  MERGER ? 
  !       i=5953  GRUPO
-i= 51976
-      x=pos_hl(1,i) 
-      y=pos_hl(2,i) 
-      z=pos_hl(3,i) 
+        open(7,file='halos_R1198.dat',status='unknown')  !saltear 19 filas
+        do i=1,19
+                read(7,*)
+        enddo
+ do i=1,halos
+                read(7,*) id_hl(i), np_hl(i), nn, nn, rvir(i), nn, nn, nn,pos_hl(1,i), pos_hl(2,i), pos_hl(3,i), &
+                vel_hl(1,i), vel_hl(2,i), vel_hl(3,i)
+ enddo
+ do i=1,halos
+                if (id_hl(i)== id_0) then 
+                x=pos_hl(1,i) 
+                y=pos_hl(2,i) 
+                z=pos_hl(3,i)
+                velx = vel_hl(1,i) 
+                vely = vel_hl(2,i) 
+                velz = vel_hl(3,i) 
                 bx = int(x/abin) + 1
                 by = int(y/abin) + 1
                 bz = int(z/abin) + 1
@@ -193,10 +188,13 @@ i= 51976
                                head_gs,pos_gs,vel_gs,link_gs,rvir(i),mass_gs,masa_gs,L_st)
      call cuentas_DM(x,y,z,velx,vely,velz,bx,by,bz,part_dm,ndm,cell,tot_dm, &
                                head_dm,pos_dm,vel_dm,link_dm,rvir(i),mass_dm,masa_dm,L_st)
-
+                cycle
+                endif
        close(10)
        close(11)
        close(12)
+       close(7)
+ enddo       
 endprogram first
 subroutine cuentas_ST(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,link,rvir,mass,masa,Ltot)
         !use modulos

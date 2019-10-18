@@ -8,7 +8,7 @@ program df
         !open(11,file='diagfases_wll.dat',status='unknown',action='write')
         !open(12,file='diagfases_ext.dat',status='unknown',action='write')
         !open(13,file='diagfases_sf.dat',status='unknown',action='write')
-        open(13,file='diagfases_VOID.dat',status='unknown',action='write')
+        open(13,file='diagfases_VOID_fueraRE.dat',status='unknown',action='write')
         call reader() 
        
 
@@ -25,7 +25,7 @@ program df
                 !if(d<=6)                write(10,*) te, dens(i), sfr(i)
                 !if(d>6 .and. d<=12)     write(11,*) te, dens(i), sfr(i)
                 !if(d>12 .and. d<=18)    write(12,*) te, dens(i), sfr(i)
-         if (d<9.750)        write(13,*) te, dens(i), sfr(i)
+                if (d>20 .and. d<25)        write(13,*) te, dens(i), sfr(i)
         enddo
 
 

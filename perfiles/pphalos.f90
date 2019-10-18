@@ -1,7 +1,7 @@
 program first0
         implicit none
-        integer,parameter :: bines=30, VOID=1373,halos= 105390  !106409 
-        real,parameter :: rmax=35,rmin=.5, pi=acos(-1.),corte=25
+        integer,parameter :: bines=30, VOID=1198,halos= 105390  !106409 
+        real,parameter :: rmax=35,rmin=.1, pi=acos(-1.),corte=20
         real :: abin,d,vol,rm, rand,minmass,maxmass,minsfr,maxsfr,abin2,rad,r0
         integer :: bin,bin2  
         integer :: dmp,gsp,i 
@@ -12,7 +12,8 @@ program first0
         real,dimension(3,halos) :: pos
         integer,dimension(halos) :: pnum
   !-----------------------------------------------------------------------------    
- open(24,file='/mnt/is2/fstasys/ITV/base09/rockstar/halos_0.7.ascii',status='unknown',action='read')
+ !open(24,file='/mnt/is2/fstasys/ITV/base09/rockstar/halos_0.5.ascii',status='unknown',action='read')
+ open(24,file='/home/arodriguez/halos.dat',status='unknown',action='read')
  do i=1,20
         read(24,*)
  enddo
@@ -52,7 +53,8 @@ print*, rv,x,y,z
               !  vol2 = (4./3.)*pi*((10**(rad))**3-((10**(r0))**3))  ! ESTE ES
          !       PARA EL DIFERENCIAL
                 vol  = (4./3.)*pi*((i*abin+rmin)**3-(rmin)**3)
-                write(17,*) ((i-.5)*abin+rmin), dmp, vol,num_dm(i),vol2
+                !write(17,*) ((i-.5)*abin+rmin), dmp, vol,num_dm(i),vol2
+                write(17,*) ((i-0)*abin+rmin), dmp, vol,num_dm(i),vol2
                 r0 = rad
         enddo
         close(17)

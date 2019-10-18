@@ -10,7 +10,7 @@ program first
         use modulos
         use OMP_lib
         implicit none
-        integer,parameter::halos=87780-19, box=500, cell=50
+        integer,parameter::halos=87780-19, box=500, cell=5
         integer :: ngas,ndm,ntid,nst
         integer :: k,m,l,p,particles,part_gs,part_dm,part_st,part_td
         real,allocatable :: pos_gs(:,:), vel_gs(:,:)
@@ -145,11 +145,11 @@ write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
 !-------------------------------------------------------------------------------------------
 write(*,*) 'COMENZANDO CALCULOS'
 !open(10,file='propiedades_halos.dat',status='unknown')
-open(10,file='halosprop_2rvir_2.dat',status='unknown')
+open(10,file='halosprop.dat',status='unknown')
 !$OMP PARALLEL DEFAULT (NONE) &
 !$OMP PRIVATE(x,y,z,velx,vely,velz,bx,by,bz,part_td,rho,ssfr,maxhsml,part_gs, &
 !$OMP part_dm,part_st, masa_gs,masa_dm,masa_st ) &
-!$OMP SHARED(pos_hl,vel_hl,abin,tot_td,tot_gs,tot_dm,tot_st,head_td,head_gs, &
+!$OMP SHARED(pos_hl,vel_hl,id_hl,abin,tot_td,tot_gs,tot_dm,tot_st,head_td,head_gs, &
 !$OMP head_st,head_dm,pos_td,pos_dm,pos_gs,pos_st,vel_td,vel_gs,vel_st,vel_dm,link_td, &
 !$OMP link_gs,link_st,link_dm,rvir,mass_gs,mass_dm,mass_st,dens,sfr,hsml,ntid,ngas, &
 !$OMP nst,ndm,np_hl,spin)
@@ -170,7 +170,7 @@ open(10,file='halosprop_2rvir_2.dat',status='unknown')
                 part_td = 0 
                 call chequeo(x,y,z,bx,by,bz,part_td,ntid,cell,tot_td, &
                                head_td,pos_td,vel_td,link_td,rvir(i))
-                if (part_td>0) cycle
+               ! if (part_td>0) cycle
              !-----------------------------------
                 part_gs = 0 
                 call cuentasgas(x,y,z,velx,vely,velz,bx,by,bz,part_gs,ngas,cell,tot_gs, &
@@ -181,10 +181,10 @@ open(10,file='halosprop_2rvir_2.dat',status='unknown')
                 part_st = 0 
                 call cuentas(x,y,z,velx,vely,velz,bx,by,bz,part_st,nst,cell,tot_st, &
                                head_st,pos_st,vel_st,link_st,rvir(i),mass_st,masa_st)
-                if (part_dm>25) then
+!                if (part_dm>25) then
                         !espin_dm = L_dm/(masa_dm*rvir(i)**2)*sqrt(G*masa_dm/(rvir(i)**3))
-                        write(10,*) x,y,z,rvir(i),np_hl(i),part_gs,part_dm,part_st,masa_st
-                endif
+                        write(10,*) x,y,z,rvir(i),np_hl(i),part_gs,part_dm,part_st,masa_st,id_hl(i)
+!                endif
               !  endif
         enddo
        !$OMP END DO
@@ -269,6 +269,7 @@ subroutine cuentasgas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,li
                                         masa = masa + mass(p)
                                         rho = rho + dens(p) 
                                         o = o + 1
+                                        
                                         if (hsml(p) > maxhsml) maxhsml = hsml(p)
                                 endif
                                p = link(p)       
