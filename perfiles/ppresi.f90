@@ -3,7 +3,7 @@
 program first
         use modulos
         implicit none
-        integer,parameter :: bines=19, VOID=1198
+        integer,parameter :: bines=19, VOID=1373
         real,parameter :: rmax=35, pi=acos(-1.),rmin=.5
         real :: abin,d,vol,vol2,rm,rand,minmass,maxmass,minsfr,maxsfr,abin2,ri,rad,r0
         integer :: bin,bin2
@@ -14,12 +14,12 @@ program first
   !-----------------------------------------------------------------------------     
         call reader()
 
-        xbox=411.217
-        ybox=162.1655
-        zbox=453.0553 
-!        xbox=403.896
-!        ybox=459.8882
-!        zbox=440.9021 
+!        xbox=411.217
+!        ybox=162.1655
+!        zbox=453.0553 
+        xbox=403.896
+        ybox=459.8882
+        zbox=440.9021 
 
         open(13,file='voids_new.dat')
         do i=1,VOID-1

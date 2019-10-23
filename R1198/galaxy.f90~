@@ -9,7 +9,7 @@
 program first
         use modulos
         implicit none
-        integer,parameter:: id_0=52086
+        integer,parameter:: id_0= 4061
         integer,parameter::halos=87780-19, box=500, cell=125,halonumber=2896
         integer :: ngas,ndm,ntid,nst
         integer :: k,m,l,p,particles,part_gs,part_dm,part_st,part_td

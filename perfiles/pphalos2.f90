@@ -40,7 +40,7 @@ print*, rv,x,y,z
                 endif
         enddo
    !---------------------------------------------------------------------     
-        open(17,file='halosprofiles.dat',status='unknown')
+        open(17,file='halosprofiles22.dat',status='unknown')
         dmp = 0
         r0=rmin
         ri=0
@@ -50,7 +50,8 @@ print*, rv,x,y,z
               !  vol2 = (4./3.)*pi*((10**(rad))**3-((10**(r0))**3))  ! ESTE ES
          !       PARA EL DIFERENCIAL
                 vol  = (4./3.)*pi*((i*abin+rmin)**3) !-(rmin)**3)
-                write(17,*) ((i-.5)*abin+rmin), dmp, vol,num_dm(i),vol2
+                !write(17,*) ((i-.5)*abin+rmin), dmp, vol,num_dm(i),vol2
+                write(17,*) ((i-.5)*abin), dmp, vol,num_dm(i),vol2
                 r0 = rad
         enddo
         close(17)
