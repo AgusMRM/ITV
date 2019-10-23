@@ -1,0 +1,19 @@
+program
+        use modulos
+        use openmp
+        implicit none
+        integer :: j
+        real ::
+
+        call reader()
+
+        xbox=403.8960 
+        ybox=459.8882
+        zbox=440.9021 
+        xc=408.205481 - xbox + 250 
+        yc=457.777839 - ybox + 250   
+        zc=441.538681 - zbox + 250
+
+
+
+endprogram
