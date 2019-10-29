@@ -11,10 +11,10 @@ program first
         use modulos
         use OMP_lib
         implicit none
-        integer,parameter::halos=87780-19, box=500, cell=50, VOID=1198
+        integer,parameter::halos=71417-19, box=500, cell=50, VOID=1373
         real,parameter ::  xbox=411.2170 ,ybox=162.1655 ,zbox=453.0553
         !real,parameter ::  xbox=403.8960 ,ybox=459.8882 ,zbox=440.9021
-        character(len=200), parameter :: hpath='/mnt/is2/dpaz/ITV/R1198/halos/halos_50.ascii'
+        character(len=200), parameter :: hpath='/mnt/is2/dpaz/ITV/S1373/halos/halos_50.ascii'
         character(len=200) :: hfilename
         integer :: ngas,ndm,ntid,nst
         integer :: k,m,l,p,particles,part_gs,part_dm,part_st,part_td

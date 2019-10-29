@@ -1,8 +1,8 @@
 program IdEnTiFiCaToR
         !use Identikit
         implicit none
-        integer, parameter :: halos=71417-19, cell=16, bines=10000
-        real,parameter :: DELTA=-0.9,rmax=12, rmin=3, halos_tot=850350
+        integer, parameter :: halos=71417-19, cell=16, bines=2000
+        real,parameter :: DELTA=-0.9,rmax=18, rmin=3, halos_tot=491338  !850350
         real,parameter :: pi=acos(-1.)
         real ::a
         integer ::i,j
@@ -22,7 +22,7 @@ program IdEnTiFiCaToR
         enddo
         do i=1,halos
                 read(10,*)a, num
-                if  (num>1529) dimen=dimen+1
+                if  (num>(2*1529)) dimen=dimen+1
         enddo   
         close(10)
         
@@ -36,7 +36,7 @@ program IdEnTiFiCaToR
         do i=1,halos
                 
                 read(10,*) a,num,a,a,a,a,a,a,px,py,pz        
-                if  (num>1529) then
+                if  (num>2*1529) then
                 j=j+1
                 num_p(j)=num
                 pos(1,j)=px
@@ -46,16 +46,18 @@ program IdEnTiFiCaToR
         enddo   
         close(10) 
        ! call linkedlist(halos,abin,cell,pos,head,tot,link) 
-        x0=254
-        y0=247
+        x0=250
+        y0=250
         z0=250
        ! x0=252
        ! y0=245
        ! z0=250
         abin=(rmax-rmin)/real(bines)
-        dmean=halos_tot/500**3
+        dmean=halos_tot/(500**3)
+        print*, dmean
         r_void=0
-        do j=1,100000
+        do j=1,5000000
+              !  write(*,*) x0,y0,z0
                 cont=0
                 do i=1,dimen
                 d= sqrt((pos(1,i)-x0)**2+(pos(2,i)-y0)**2+(pos(3,i)-z0)**2)
@@ -69,15 +71,16 @@ program IdEnTiFiCaToR
                 part=0
                 D_r=0 
                 do i=1,bines
-                        radio=i*abin
-                        vol=(4./3.)*pi*((i*abin)**3-rmin**3)
+                        radio=i*abin+rmin
+                        vol=(4./3.)*pi*((radio)**3-rmin**3)
                         part= part + cont(i)
                         D_r(i) = (part/vol-dmean)/dmean
-                 !       print*, D_r(i)
-                        if (D_r(i)>=-0.9) cycle
+                       ! print*,'delta integrada', D_r(i)
+                 !       if (D_r(i)>=-0.8) print*, radio
+                        if (D_r(i)>=-0.9) goto 3
                 enddo
-           !    print*, radio
-                if (radio>r_void) then
+                !print*, radio, part/vol, i
+         3       if (radio>r_void) then
                         write(*,*) 'CAMBIANDO VOID',j
                         r_void = radio
                         xv = x0
@@ -87,13 +90,17 @@ program IdEnTiFiCaToR
                 call random_number(dx)        
                 call random_number(dy)        
                 call random_number(dz)
-                x0 = x0 + 0.1*(0.5-dx)        
-                y0 = y0 + 0.1*(0.5-dy)        
-                z0 = z0 + 0.1*(0.5-dz)
-                if (abs(x0-250)<10) x0 = 250
-                if (abs(y0-250)<10) y0 = 250
-                if (abs(z0-250)<10) z0 = 250
+
+                x0 = x0 + 1*(0.5-dx)        
+                y0 = y0 + 1*(0.5-dy)        
+                z0 = z0 + 1*(0.5-dz)
+               ! if (abs(x0-250)>10) write(*,*) 'REINICIO X0', x0-250,j 
+               ! if (abs(y0-250)>10) write(*,*) 'REINICIO Y0',y0-250,j
+               ! if (abs(z0-250)>10) write(*,*) 'REINICIO Z0',z0-250,j
+                if (abs(x0-250)>10) x0 = 250
+                if (abs(y0-250)>10) y0 = 250
+                if (abs(z0-250)>10) z0 = 250
         enddo               
-        write(*,*) radio,xv,yv,zv 
+        write(*,*) r_void,xv,yv,zv 
        stop 
 endprogram IdEnTiFiCaToR

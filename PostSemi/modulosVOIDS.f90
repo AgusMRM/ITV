@@ -24,7 +24,7 @@ module modulos
    real*4,allocatable    :: pos(:,:),vel(:,:)
    integer*4,allocatable :: id(:),idch(:),idgn(:)
    real*4, allocatable,dimension(:)    :: mass, u, rho, ne, &
-                                        nh,hsml,sfr,abvc,temp 
+                                        nh,hsml,sfr,abvc 
    real*8 n0,mol,R,vx,vy,vz
    real :: prom1,prom2,prom3
        
