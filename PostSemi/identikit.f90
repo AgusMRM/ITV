@@ -154,41 +154,47 @@ subroutine contador(p,rmin,rmax,xc,yc,zc,mu,yhe,te,vv,mp,kcgs)
         use modulos
         implicit none
         integer :: p
-        real :: d,xc,yc,zc,mu,yhe,te,vv,mp,kcgs,rmin,rmax
+        real :: d,xc,yc,zc,mu,yhe,te,vv,mp,kcgs,rmin,rmax,dmean,pi
+        pi=acos(-1.)
+        dmean=(3*(100**2)*(0.045))/(8*pi*(4.3e-9))*1e-10
         p=0
         do i=1,nall(0)
                 d=sqrt((pos(1,i)-xc)**2+(pos(2,i)-yc)**2+(pos(3,i)-zc)**2)       
                 if (d<rmax .and. d>rmin) then 
                  mu=(1.0-yHe)/(1+yHe+ne(i))
                  te=(5./3.-1.)*u(i)*vv*mu*mp/kcgs
-                 if (te>10**(5.5) .and. dens(i)<10**(1.)) p=p+1         
+                 if (te>10**(5.5) .and. (dens(i)/dmean)<10**(2.)) p=p+1         
                 endif 
         enddo
         print*, p
 endsubroutine
-subroutine Id_Finder(dmn,idp,snapshot,hist)
+subroutine Id_Finder(dmn0,dmn,idp,snapshot,hist)
 !        use modulos
         implicit none
         character(len=200) :: snumber
-        integer:: s,p,particula,snapshot,dmn,i
+        integer:: s,p,particula,snapshot,dmn,i,j
         integer,dimension(dmn) :: idp
         real,dimension(10,dmn) :: hist
         integer(4),dimension(0:5) ::nall
-        real*4,allocatable    :: pos(:,:),vel(:,:)
-        integer*4,allocatable :: id(:),idch(:),idgn(:)
-        real*4, allocatable,dimension(:)    :: mass, u, dens, ne, nh,hsml,sfr,abvc,temp
+        real    :: pos(3,dmn0),vel(3,dmn0)
+        integer*4,dimension(dmn0) :: id,idch,idgn
+        real*4,dimension(dmn0)    :: mass, u, dens, ne, nh,hsml,sfr,abvc,temp
+        integer :: dmn1,dmn0
         s = 51-snapshot
         write(snumber,'(I3)') snapshot
-        call reader_parallel(snumber,snapshot)
+        id=0; pos=0; u=0; dens=0; ne=0
+        call reader_parallel(snumber,snapshot,dmn0,pos,id,u,dens,ne,dmn1)
         p = 1
         particula = idp(p)
-        do i=1,nall(0)
-                if (id(i)==particula) then
-                        hist(s,p) = dens(i)
+        do while (p/=dmn)
+                do j=1,dmn1
+                if (id(j)==particula) then
+                        hist(s,p) = dens(j)
                         p = p + 1
                         particula = idp(p)
-                endif        
-                deallocate(pos,vel,id,idch,idgn,u,dens,mass,ne)
+                endif      
+                enddo  
+!                deallocate(pos,vel,id,idch,idgn,u,dens,mass,ne)
         enddo 
 
 endsubroutine        
@@ -219,7 +225,7 @@ SUBROUTINE ORDEN(NELEM,ARREG)
         ENDDO
         RETURN
 ENDSUBROUTINE
-subroutine reader_parallel(snumber,snapshot)
+subroutine reader_parallel(snumber,snapshot,dmn0,pos0,id0,u0,dens0,ne0,dmn1)
    implicit none
    integer, parameter :: FILES = 1         ! number of files per snapshot
    character(len=200), parameter :: path='/mnt/is2/dpaz/ITV/S1373/out'
@@ -236,9 +242,12 @@ subroutine reader_parallel(snumber,snapshot)
    real*8 newbox
    real*8    omega_m,omega_l
    integer*4 unused(26)
-   real*4,allocatable    :: pos(:,:),vel(:,:)
-   integer*4,allocatable :: id(:),idch(:),idgn(:)
-   real*4, allocatable,dimension(:)    :: mass, u, dens, ne, nh,hsml,sfr,abvc,temp
+   real*4,allocatable  :: pos(:,:),vel(:,:)
+   integer*4,allocatable,dimension(:) :: id,idch,idgn
+   real*4, allocatable,dimension(:)    :: mass, u, dens, ne, nh,hsml,sfr,abvc
+   real,dimension(dmn0) :: u0,dens0,ne0
+   integer,dimension(dmn0) :: id0
+   real :: pos0(3,dmn0)
    real*8 n0,mol,R,vx,vy,vz
    real :: prom1,prom2,prom3
    character(len=4) :: blckname 
@@ -249,8 +258,9 @@ subroutine reader_parallel(snumber,snapshot)
    integer(4) :: i1,i2,npgs
    logical :: ilogic
    character(len=200) :: snumber
-   integer:: snapshot
+   integer:: snapshot,dmn1,dmn0
 
+   print*, snapshot
    write(fnumber,'(I3)') 1
    do i=1,3 
       if (snumber(i:i) .eq. ' ') then 
@@ -326,5 +336,17 @@ subroutine reader_parallel(snumber,snapshot)
    read(snapshot)ne
    close(snapshot)
    npgs = nall(0)
+
+   do i=1,nall(0)
+                pos0(1,i) = pos(1,i)
+                pos0(2,i) = pos(2,i)
+                pos0(3,i) = pos(3,i)
+                u0(i)     = u(i)
+                id0(i)    = id(i)
+                ne0(i)    = ne(i)
+                dens0(i)  = dens(i)
+   enddo
+        dmn1=nall(0)
+
 endsubroutine
 

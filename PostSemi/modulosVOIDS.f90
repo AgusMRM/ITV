@@ -37,7 +37,6 @@ module modulos
 
    !logical :: ilogic
 endmodule
-
 subroutine reader()
         use modulos
    write(snumber,'(I3)') SNAPSHOT

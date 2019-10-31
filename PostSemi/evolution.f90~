@@ -1,10 +1,19 @@
+! ESTE PROGRAMA ES PARA FILTRAR PARTICULAS EN BASE A REGIONES DEL DIAGRAMA DE
+! FASES; BUSCARLAS EN OTRO SNAPSHOT Y VER SUS PROPIEDADES. LAS REGIONES EN LAS
+! QUE SE QUIERE FILTRAR ESTAN INTRODUCIDAS EN LA SUBRUTINA 'CONTADOR' Y EN OTRAS
+! PARTES DEL PROGRAMA, ASI QUE REVISAR BIEN.
+
+!USA OPENMP Y SE COMPILA JUNTO CON EL PROGRAMA IDENTIKIT.F90 QUE TIENE TODAS LAS
+!SUBRUTINAS Y MODULOS NECESARIOS.
 program recorrido
         use modulos
         use OMP_lib  
         implicit none
-        real,parameter:: rmax=9.57, rmin=8.08 
+        real,parameter:: rmax=9.57, rmin=8.08, pi=acos(-1.)
+        integer,parameter :: dmn0 = 29791000    !para el void S 
+        !integer,parameter :: dmn0 = 35937000    !para el void R 
         character(len=200)::snumber
-        real:: xbox,ybox,zbox,xc,yc,zc,xh,yhe,mp,mu,kcgs,vv,te,d
+        real:: xbox,ybox,zbox,xc,yc,zc,xh,yhe,mp,mu,kcgs,vv,te,d,dmean
         integer::p,dmn,snapshot
         integer,allocatable:: idp(:)
         real,allocatable:: hist(:,:) 
@@ -22,7 +31,7 @@ program recorrido
         mp=1.6726E-24
         kcgs=1.3807E-16
         vv=1e10
-        
+        dmean=(3*(100**2)*(0.045))/(8*pi*(4.3e-9))*1e-10
         p=0
         call contador(p,rmin,rmax,xc,yc,zc,mu,yhe,te,vv,mp,kcgs)
         dmn=p
@@ -39,7 +48,7 @@ program recorrido
                 if (d<rmax .and. d>rmin) then 
                  mu=(1.0-yHe)/(1+yHe+ne(i))
                  te=(5./3.-1.)*u(i)*vv*mu*mp/kcgs
-                 if (te>10**(5.5) .and. dens(i)<10**(1.)) then
+                 if (te>10**(5.5) .and. (dens(i)/dmean)<10**(2.)) then
                         p = p +1
                         idp(p) = id(i)
                  endif         
@@ -49,22 +58,29 @@ program recorrido
    ! AHORA LO QUE TENGO QUE HACER ES ORDENARLO EN FORMA CRECIENTE   
         call orden(dmn,idp) 
         write(*,*) 'VECTOR ID ORDENADO: READY'
-        snapshot=49
-        deallocate(pos,vel,id,idch,idgn,u,dens,mass,ne)
+   !     snapshot=49
+
+      !  print*, u(123)m, u(321313)
+       deallocate(pos,vel,id,idch,idgn,u,dens,mass,ne)
         
    !$OMP PARALLEL DEFAULT(NONE) &
    !$OMP PRIVATE (i,snapshot,pos,vel,id,idch,idgn,u,dens,mass,ne) &
    !$OMP SHARED (dmn,idp,hist)   
    !$OMP DO SCHEDULE (DYNAMIC)
         
-        do i=45,49
+        do i=41,50
                 snapshot=i
-                call Id_Finder(dmn,idp,snapshot,hist)         
+                call Id_Finder(dmn0,dmn,idp,snapshot,hist)         
         enddo
 
    !$OMP END DO
    !$OMP BARRIER
    !$OMP END PARALLEL
+        open(20,file='evolucion.dat',status='unknown')
+        do i=1,dmn
+                write(20,*) hist(:,i)
+        enddo
+        close(20)
         deallocate(hist,idp)
 
 endprogram

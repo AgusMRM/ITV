@@ -31,10 +31,10 @@ program cicjack_omp
  ! real(DP),parameter              :: rmin=1000.
   integer,parameter           :: nthread   =48, VOID=1373 
   integer,parameter           :: nside     = 100
-  integer,parameter           :: nbindist  =200
+  integer,parameter           :: nbindist  = 500
   integer,parameter           :: nsideheal = 2
   real,parameter              :: rmax_vu=25. , rmin_vu=0.2
-
+  real,parameter              :: tlim=10**5  , dlim=100
   integer                     :: kk1,kk2,ipx,nwrites
   integer ,dimension(nthread) :: seed
   integer ,dimension(:),allocatable   :: nes
@@ -43,6 +43,8 @@ program cicjack_omp
   real(pr),dimension(:),allocatable :: dens_pix,dens1_pix,dens2_pix
   real(pr),dimension(:),allocatable :: dens3_pix,dens4_pix
   real(pr),dimension(:,:),allocatable ::dens2 ,dens_jack
+  real(pr),dimension(:,:),allocatable ::dens2_1, dens2_2, dens2_3, dens2_4 
+  real(pr),dimension(:,:),allocatable ::dens1_jack, dens2_jack, dens3_jack, dens4_jack 
   real(pr),dimension(:),allocatable :: dens_h_pix
   real(pr),dimension(:),allocatable :: bfld_pix
   real(pr),dimension(:),allocatable :: x,y,z
@@ -58,7 +60,7 @@ program cicjack_omp
   character(len=2) :: ixs,iys,izs,ibs,jbs,kbs 
   integer,dimension(nside,nside,nside):: lirst
   integer,dimension(:),allocatable :: ll
-  real(DP) :: volbox,pi
+  real(DP) :: volbox
   real(DP) :: xp,yp,zp
   real(pr):: bb
   real(pr):: rr
@@ -67,14 +69,25 @@ program cicjack_omp
   real(pr) :: fac
   integer :: iHsml
   integer :: npix
-  real :: rhomin, rhomax,rad0,promedio,prom,densidad,dens3,error,temp 
+  real ::f1,f2,f3,f4,ftot
+  real :: rhomin, rhomax,rad0,promedio,prom,densidad,dens3,error
+  real :: pi, temp,densidad1,densidad2,densidad3,densidad4
+  real :: promedio1,promedio2,promedio3,promedio4
+  real ::dmean,error1,error2,error3,error4
   real,dimension(nbindist) :: jmed,jsig,sig
-        xbox=403.896
-        ybox=459.8882
-        zbox=440.9021 
-       ! xbox=411.217
-       ! ybox=162.1655
-       ! zbox=453.0553 
+  real,dimension(nbindist) :: jmed1,jsig1,sig1
+  real,dimension(nbindist) :: jmed2,jsig2,sig2
+  real,dimension(nbindist) :: jmed3,jsig3,sig3
+  real,dimension(nbindist) :: jmed4,jsig4,sig4
+  pi       = 4.*atan(1.)
+  dmean=(3*(100**2)*(0.045))/(8*pi*(4.3e-9))*1e-10
+ ! dmean=1
+     xbox=403.896
+     ybox=459.8882
+     zbox=440.9021 
+      !   xbox=411.217
+      !   ybox=162.1655
+      !   zbox=453.0553 
         open(13,file='/mnt/is2/fstasys/ITV/base09/voids/voids_new.dat')
         do i=1,VOID-1
         read(13,*)
@@ -85,10 +98,37 @@ program cicjack_omp
         ze=ze-zbox+250
   ncen = 1
 close(13)
+
   print*,'leyendo sim....'
 
   call reader() !rho
-
+!------------------------------------------------------------  
+!------------------------------------------------------------  
+!------------------------------------------------------------  
+!------------------------------------------------------------  
+f1=0;f2=0;f3=0;f4=0
+write(*,*) 'CALCULO FRACCION DE CADA REGION'
+do i=1,nall(0)
+         
+         dc=sqrt((pos(1,i)-xe)**2+(pos(2,i)-ye)**2+(pos(3,i)-ze)**2)
+         if (dc<rmax_vu) then 
+                call temperature(u(i),ne(i),temp)
+                if (temp<tlim .and. (rho(i)/dmean)<dlim) then
+                f1=f1+1
+                elseif (temp<tlim .and. (rho(i)/dmean)>=dlim) then
+                f2=f2+1
+                elseif (temp>=tlim .and. (rho(i)/dmean)<dlim) then
+                f3=f3+1
+                elseif (temp>=tlim .and. (rho(i)/dmean)>=dlim) then
+                f4=f4+1
+                endif
+         endif
+enddo
+print*, f1,f2,f3,f4
+!------------------------------------------------------------  
+!------------------------------------------------------------  
+!------------------------------------------------------------  
+!------------------------------------------------------------  
   dbox = 500     !al parecer, el dbox es el tamaño del box en Kpc
   parbox = nall(0) 
 
@@ -107,10 +147,16 @@ do i=1,nall(0)
 enddo
   call grid(x,y,z,lirst,ll)
   allocate(dens2  (ncen,nbindist))
+  allocate(dens2_1(ncen,nbindist),dens2_2(ncen,nbindist))
+  allocate(dens2_3(ncen,nbindist),dens2_4(ncen,nbindist))
   npix = 12*( nsideheal )**2                 ! ESTO NO LO ENTIENDO
   allocate(grid_pixels(npix))
   allocate(ilogic(npix))
   allocate(dens_jack(nbindist,npix))
+  allocate(dens1_jack(nbindist,npix))
+  allocate(dens2_jack(nbindist,npix))
+  allocate(dens3_jack(nbindist,npix))
+  allocate(dens4_jack(nbindist,npix))
   
   do i=0,npix-1
       call pix2vec_nest(nsideheal,i,v)
@@ -123,20 +169,26 @@ enddo
   dbindist_vu = (lrmax_vu - lrmin_vu) / nbindist
 
   volbox   = dbox*dbox*dbox
-  pi       = 4.*atan(1.)
   write(*,*)'nbinsit', nbindist
- call OMP_set_num_threads(nthread)   !si no llamo esta subrutina la compu
+! call OMP_set_num_threads(nthread)   !si no llamo esta subrutina la compu
                                          !elige aumeaticamente el numero de cores
   dens2   = -999.999
+  dens2_1   = -999.999
+  dens2_2   = -999.999
+  dens2_3   = -999.999
+  dens2_4   = -999.999
   do ibin=1,nbindist
                distlog = (ibin - 0.5)*dbindist_vu + lrmin_vu
                rad    = (10.0**distlog)!*rv
-                print*, rad
   enddo
   allocate(dens_pix(npix))
   allocate(dens1_pix(npix),dens2_pix(npix),dens3_pix(npix),dens4_pix(npix))
 l=1
               dens_jack  = 0.0
+              dens1_jack  = 0.0
+              dens2_jack  = 0.0
+              dens3_jack  = 0.0
+              dens4_jack  = 0.0
  !do l=1, ncen  ! en mi caso, voy de uno a uno 
   !-------------------------------------------------------------------------------------------
       !$OMP PARALLEL DEFAULT(NONE) &
@@ -145,7 +197,8 @@ l=1
       !$OMP dens_pix,dens1_pix,dens2_pix,dens3_pix,dens4_pix, & 
       !$OMP ilogic,ijack,temp) & 
       !$OMP SHARED (lrmin_vu,xe,ye,ze,grid_pixels,lirst,ll,x,y,z,b2,rho,hsml,dens2, &
-      !$OMP npix,facbin,pos,l,pi,dbindist_vu,mass,dens_jack,ne,u)
+      !$OMP npix,facbin,pos,l,pi,dbindist_vu,mass,dens_jack,ne,u, &
+      !$OMP dens2_1,dens2_2,dens2_3,dens2_4,dmean,dens1_jack,dens2_jack,dens3_jack,dens4_jack )
       !$OMP DO SCHEDULE(DYNAMIC)           !      L O   C A M B I E   D E    L U G A R 
             radio: do ibin=1, nbindist    
               dens_pix   = 0.0
@@ -153,7 +206,6 @@ l=1
               dens2_pix   = 0.0
               dens3_pix   = 0.0
               dens4_pix   = 0.0
- print*, ibin 
                distlog = (ibin - 0.5)*dbindist_vu + lrmin_vu
                rad    = (10.0**distlog)         !*rv
                pixel: do ipx=1,npix
@@ -180,8 +232,21 @@ l=1
                             dc = (xc-xp)**2+(yc-yp)**2+(zc-zp)**2
                             dist = sqrt(dc)
                             if(dist < Hsml(it))then
-                               call KernelGadget(dist, hsml(it),fac) 
-                               dens_pix(ipx) = dens_pix(ipx) +mass(it)*fac
+                               call KernelGadget(dist, hsml(it),fac)
+
+                                ! ASIGNO LAS PARTICULAS A CADA REGION Y CALCULO
+                                ! LAS DENSIDAD RESPECTIVAS
+                                if (temp<tlim .and. (rho(it)/dmean) <dlim) then
+                                dens1_pix(ipx) = dens1_pix(ipx) +(mass(it))*fac
+                                elseif (temp<tlim .and. (rho(it)/dmean) >=dlim) then
+                                dens2_pix(ipx) = dens2_pix(ipx) +(mass(it))*fac
+                                elseif (temp>=tlim .and. (rho(it)/dmean) <dlim) then
+                                dens3_pix(ipx) = dens3_pix(ipx) +(mass(it))*fac
+                                elseif (temp>=tlim .and. (rho(it)/dmean) >=dlim) then
+                                dens4_pix(ipx) = dens4_pix(ipx) +(mass(it))*fac
+                                endif
+
+
                             endif
                             if(it == lirst(iix,iiy,iiz)) exit vecino
                           end do vecino
@@ -191,68 +256,115 @@ l=1
                     end do seg
                   end do pri 
                enddo pixel
-               dens2(l,ibin) = sum(dens_pix)/npix   
+               dens2_1(l,ibin) = sum(dens1_pix)/npix   
+               dens2_2(l,ibin) = sum(dens2_pix)/npix   
+               dens2_3(l,ibin) = sum(dens3_pix)/npix   
+               dens2_4(l,ibin) = sum(dens4_pix)/npix   
                 do ijack=1,npix
                         ilogic=.TRUE.
                         ilogic(ijack)=.FALSE.
-                        dens_jack(ibin,ijack) = sum(dens_pix,mask=ilogic)/npix
+                        dens1_jack(ibin,ijack) = sum(dens1_pix,mask=ilogic)/npix
+                        dens2_jack(ibin,ijack) = sum(dens2_pix,mask=ilogic)/npix
+                        dens3_jack(ibin,ijack) = sum(dens3_pix,mask=ilogic)/npix
+                        dens4_jack(ibin,ijack) = sum(dens4_pix,mask=ilogic)/npix
                 enddo
             enddo radio
       !$OMP END DO
       !$OMP BARRIER
       !$OMP END PARALLEL 
-                write(*,*) dens_jack(10,:)
+                !write(*,*) dens_jack(10,:)
 !  end do  ! termina centro voids
 write(*,*) 'Escribiendo...'
  open(10,file='profile_gas.dat',status='unknown',action='write')
   deallocate(dens_pix)
-jmed=0.0; jsig=0.0; sig=0.0 
-  do i=1,nbindist
+  deallocate(dens1_pix,dens2_pix,dens3_pix,dens4_pix)
+jmed1=0.0; jsig1=0.0; sig1=0.0 
+jmed2=0.0; jsig2=0.0; sig2=0.0 
+jmed3=0.0; jsig3=0.0; sig3=0.0 
+jmed4=0.0; jsig4=0.0; sig4=0.0 
+  
+ftot=f1+f2+f3+f4
+ do i=1,nbindist
                 distlog = (i - 0.5)*dbindist_vu + lrmin_vu
                 rad    = (10.0**distlog)         !*rv
-
-              !  jmed=0.0
-              !  jsig=0.0
+               
+                do ijack=1,npix
+                jmed1(i)=jmed1(i)+dens1_jack(i,ijack)
+                jmed2(i)=jmed2(i)+dens2_jack(i,ijack)
+                jmed3(i)=jmed3(i)+dens3_jack(i,ijack)
+                jmed4(i)=jmed4(i)+dens4_jack(i,ijack)
+                enddo
+                jmed1(i) = jmed1(i)/npix
+                jmed2(i) = jmed2(i)/npix
+                jmed3(i) = jmed3(i)/npix
+                jmed4(i) = jmed4(i)/npix
                 
                 do ijack=1,npix
-                jmed(i)=jmed(i)+dens_jack(i,ijack)
+                jsig1(i)=jsig1(i)+(dens1_jack(i,ijack)-jmed1(i))**2
+                jsig2(i)=jsig2(i)+(dens2_jack(i,ijack)-jmed2(i))**2
+                jsig3(i)=jsig3(i)+(dens3_jack(i,ijack)-jmed3(i))**2
+                jsig4(i)=jsig4(i)+(dens4_jack(i,ijack)-jmed4(i))**2
                 enddo
-                jmed(i) = jmed(i)/npix
-                
-                do ijack=1,npix
-                jsig(i)=jsig(i)+(dens_jack(i,ijack)-jmed(i))**2
-                enddo
-                sig(i)=sqrt((47./48.)*jsig(i))
-!                write(10,*) rad, dens2(1,i),jmed(i),sig(i)
+                sig1(i)=sqrt(((npix-1)/real(npix))*jsig1(i))
+                sig2(i)=sqrt(((npix-1)/real(npix))*jsig2(i))
+                sig3(i)=sqrt(((npix-1)/real(npix))*jsig3(i))
+                sig4(i)=sqrt(((npix-1)/real(npix))*jsig4(i))
+     !          write(10,*) rad, dens2_1(1,i),dens2_2(1,i), &
+     !                  dens2_3(1,i),dens2_4(1,i)
+     !          write(10,*) rad, dens2_1(1,i)/(f1/real(ftot)),dens2_2(1,i)/(f2/real(ftot)), &
+     !                  dens2_3(1,i)/(f3/real(ftot)),dens2_4(1,i)/(f4/real(ftot))
  enddo
 
- j=0
- distlog = (0+ 0.5)*dbindist_vu + lrmin_vu
- rad    = (10.0**distlog)         !*rv
- rad0 = rmin_vu  
- densidad = 0 
- do i=1,nbindist
-        j=j+1
-        distlog = (i+ 0.5)*dbindist_vu + lrmin_vu
-        rad    = (10.0**distlog)         !*rv
-        densidad = densidad + dens2(1,i)*rad
-        o = o + 1
+j=0
+distlog = (0+ 0.5)*dbindist_vu + lrmin_vu
+rad    = (10.0**distlog)         !*rv
+rad0 = rmin_vu  
+densidad1 = 0 
+densidad2 = 0 
+densidad3 = 0 
+densidad4 = 0 
+do i=1,nbindist
+       j=j+1
+       distlog = (i+ 0.5)*dbindist_vu + lrmin_vu
+       rad    = (10.0**distlog)         !*rv
+       densidad1 = densidad1 + dens2_1(1,i)*rad
+       densidad2 = densidad2 + dens2_2(1,i)*rad
+       densidad3 = densidad3 + dens2_3(1,i)*rad
+       densidad4 = densidad4 + dens2_4(1,i)*rad
+       o = o + 1
 
-        error = error + jsig(i)**2
-        if (mod(i,10)==0) then
-                !distlog = (i - 0.5)*dbindist_vu + lrmin_vu
-                !rad    = (10.0**distlog)         !*rv
-                promedio = 1./(rad-rad0)*densidad*log(10.)*(log10(rad)-log10(rad0))/real(o)
-                error = sqrt(error)/real(o)
-                rad0 = rad 
-                densidad = 0   
-                o = 0             
-        write(10,*) rad, promedio, 999,error
-                error = 0
-        endif
+       error1 = error1 + jsig1(i)**2
+       error2 = error2 + jsig2(i)**2
+       error3 = error3 + jsig3(i)**2
+       error4 = error4 + jsig4(i)**2
+       if (mod(i,20)==0) then
+               !distlog = (i - 0.5)*dbindist_vu + lrmin_vu
+               !rad    = (10.0**distlog)         !*rv
+               promedio1 = 1./(rad-rad0)*densidad1*log(10.)*(log10(rad)-log10(rad0))/real(o)
+               promedio2 = 1./(rad-rad0)*densidad2*log(10.)*(log10(rad)-log10(rad0))/real(o)
+               promedio3 = 1./(rad-rad0)*densidad3*log(10.)*(log10(rad)-log10(rad0))/real(o)
+               promedio4 = 1./(rad-rad0)*densidad4*log(10.)*(log10(rad)-log10(rad0))/real(o)
+               error1 = sqrt(error1)/real(o)
+               error2 = sqrt(error2)/real(o)
+               error3 = sqrt(error3)/real(o)
+               error4 = sqrt(error4)/real(o)
+               rad0 = rad 
+               densidad1 = 0   
+               densidad2 = 0   
+               densidad3 = 0   
+               densidad4 = 0   
+               o = 0             
+       write(10,*) rad, promedio1,error1,promedio2,error2,promedio3,error3,promedio4,error4
+               error1 = 0
+               error2 = 0
+               error3 = 0
+               error4 = 0
+       endif
  enddo
  close(10)
   deallocate(   dens2,dens_jack)
+  deallocate(dens1_jack,dens2_jack,dens3_jack,dens4_jack)
+  deallocate(dens2_1,dens2_2,dens2_3,dens2_4)
 contains
 subroutine Show_progress(idx,nbt,howmany,deco,mess)
            ! uso: call show_progress(loop index, Nloops, rayitas)
