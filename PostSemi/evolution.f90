@@ -10,6 +10,7 @@ program recorrido
         use OMP_lib  
         implicit none
         real,parameter:: rmax=9.57, rmin=8.08, pi=acos(-1.)
+        integer,parameter           :: nthread=10 
         integer,parameter :: dmn0 = 29791000    !para el void S 
         !integer,parameter :: dmn0 = 35937000    !para el void R 
         character(len=200)::snumber
@@ -62,6 +63,7 @@ program recorrido
 
       !  print*, u(123)m, u(321313)
        deallocate(pos,vel,id,idch,idgn,u,dens,mass,ne)
+   call OMP_set_num_threads(nthread)   !si no llamo esta subrutina la compu
         
    !$OMP PARALLEL DEFAULT(NONE) &
    !$OMP PRIVATE (i,snapshot) &  !!,pos,vel,id,idch,idgn,u,dens,mass,ne) &

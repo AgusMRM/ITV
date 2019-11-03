@@ -29,7 +29,7 @@ program cicjack_omp
   type(trivect),dimension(:),allocatable :: grid_pixels
   real(DP),dimension(3) :: v
  ! real(DP),parameter              :: rmin=1000.
-  integer,parameter           :: nthread   =48, VOID=1373 
+  integer,parameter           :: nthread   =48, VOID=1198 
   integer,parameter           :: nside     = 100
   integer,parameter           :: nbindist  = 500
   integer,parameter           :: nsideheal = 2
@@ -82,12 +82,12 @@ program cicjack_omp
   pi       = 4.*atan(1.)
   dmean=(3*(100**2)*(0.045))/(8*pi*(4.3e-9))*1e-10
  ! dmean=1
-     xbox=403.896
-     ybox=459.8882
-     zbox=440.9021 
-      !   xbox=411.217
-      !   ybox=162.1655
-      !   zbox=453.0553 
+     !xbox=403.896
+     !ybox=459.8882
+     !zbox=440.9021 
+         xbox=411.217
+         ybox=162.1655
+         zbox=453.0553 
         open(13,file='/mnt/is2/fstasys/ITV/base09/voids/voids_new.dat')
         do i=1,VOID-1
         read(13,*)

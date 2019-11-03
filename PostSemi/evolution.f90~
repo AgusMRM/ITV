@@ -10,6 +10,7 @@ program recorrido
         use OMP_lib  
         implicit none
         real,parameter:: rmax=9.57, rmin=8.08, pi=acos(-1.)
+        integer,parameter           :: nthread=10 
         integer,parameter :: dmn0 = 29791000    !para el void S 
         !integer,parameter :: dmn0 = 35937000    !para el void R 
         character(len=200)::snumber
@@ -48,12 +49,12 @@ program recorrido
                 if (d<rmax .and. d>rmin) then 
                  mu=(1.0-yHe)/(1+yHe+ne(i))
                  te=(5./3.-1.)*u(i)*vv*mu*mp/kcgs
-                 if (te>10**(5.5) .and. (dens(i)/dmean)<10**(2.)) then
-                        p = p +1
+
                         idp(p) = id(i)
                  endif         
                 endif 
         enddo
+        stop
    ! EL VECTOR IDP TIENE LOS ID DE LAS PARTICULAS QUE ME INTERESA RASTREAR,
    ! AHORA LO QUE TENGO QUE HACER ES ORDENARLO EN FORMA CRECIENTE   
         call orden(dmn,idp) 
@@ -62,9 +63,10 @@ program recorrido
 
       !  print*, u(123)m, u(321313)
        deallocate(pos,vel,id,idch,idgn,u,dens,mass,ne)
+   call OMP_set_num_threads(nthread)   !si no llamo esta subrutina la compu
         
    !$OMP PARALLEL DEFAULT(NONE) &
-   !$OMP PRIVATE (i,snapshot,pos,vel,id,idch,idgn,u,dens,mass,ne) &
+   !$OMP PRIVATE (i,snapshot) &  !!,pos,vel,id,idch,idgn,u,dens,mass,ne) &
    !$OMP SHARED (dmn,idp,hist)   
    !$OMP DO SCHEDULE (DYNAMIC)
         

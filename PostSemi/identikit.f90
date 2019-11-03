@@ -163,7 +163,7 @@ subroutine contador(p,rmin,rmax,xc,yc,zc,mu,yhe,te,vv,mp,kcgs)
                 if (d<rmax .and. d>rmin) then 
                  mu=(1.0-yHe)/(1+yHe+ne(i))
                  te=(5./3.-1.)*u(i)*vv*mu*mp/kcgs
-                 if (te>10**(5.5) .and. (dens(i)/dmean)<10**(2.)) p=p+1         
+                 if (te<10**(3) .and. (dens(i)/dmean)<10**(0.)) p=p+1         
                 endif 
         enddo
         print*, p
@@ -192,7 +192,10 @@ subroutine Id_Finder(dmn0,dmn,idp,snapshot,hist)
                         hist(s,p) = dens(j)
                         p = p + 1
                         particula = idp(p)
+                if (mod(p,1000)==0)  print*, p,snapshot
                 endif      
+                       
+                        
                 enddo  
 !                deallocate(pos,vel,id,idch,idgn,u,dens,mass,ne)
         enddo 

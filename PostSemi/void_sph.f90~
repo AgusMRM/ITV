@@ -29,7 +29,7 @@ program cicjack_omp
   type(trivect),dimension(:),allocatable :: grid_pixels
   real(DP),dimension(3) :: v
  ! real(DP),parameter              :: rmin=1000.
-  integer,parameter           :: nthread   =48, VOID=1373 
+  integer,parameter           :: nthread   =48, VOID=1198 
   integer,parameter           :: nside     = 100
   integer,parameter           :: nbindist  = 500
   integer,parameter           :: nsideheal = 2

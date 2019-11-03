@@ -189,11 +189,13 @@ subroutine Id_Finder(dmn0,dmn,idp,snapshot,hist)
         do while (p/=dmn)
                 do j=1,dmn1
                 if (id(j)==particula) then
-print*, p
                         hist(s,p) = dens(j)
                         p = p + 1
                         particula = idp(p)
+                if (mod(p,1000)==0)  print*, p,snapshot
                 endif      
+                       
+                        
                 enddo  
 !                deallocate(pos,vel,id,idch,idgn,u,dens,mass,ne)
         enddo 
