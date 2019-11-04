@@ -212,25 +212,33 @@ enddo
   deallocate(   dens_pix)
 write(*,*) 'Escribiendo...'
  open(10,file='profile_gas.dat',status='unknown',action='write')
+ do i=1,nbindist
+                distlog = (i - 0.5)*dbindist_vu + lrmin_vu
+                rad    = (10.0**distlog)         !*rv
+                write(10,*) rad, dens2(1,i), dens4(1,i)
+
+ enddo
+
+
  j=0
                 !distlog = (i - 0.5)*dbindist_vu + lrmin_vu
                 !rad    = (10.0**distlog)         !*rv
  rad0 = 0               
- do i=1,nbindist
-        j=j+1
-        densidad = densidad + dens2(1,i)
-        prom = densidad*rad
-        o = o + 1
-        if (mod(j,10)==0) then
-                distlog = (i - 0.5)*dbindist_vu + lrmin_vu
-                rad    = (10.0**distlog)         !*rv
-                promedio = 1./(rad-rad0)*prom*log(10.)*(log10(rad)-log10(rad0))/real(o)
-                rad0 = rad 
-                densidad = 0   
-                o = 0             
-        write(10,*) rad, promedio
-        endif
- enddo
+! do i=1,nbindist
+!        j=j+1
+!        densidad = densidad + dens2(1,i)
+!        prom = densidad*rad
+!        o = o + 1
+!        if (mod(j,10)==0) then
+!                distlog = (i - 0.5)*dbindist_vu + lrmin_vu
+!                rad    = (10.0**distlog)         !*rv
+!                promedio = 1./(rad-rad0)*prom*log(10.)*(log10(rad)-log10(rad0))/real(o)
+!                rad0 = rad 
+!                densidad = 0   
+!                o = 0             
+!        write(10,*) rad, promedio
+!        endif
+! enddo
  close(10)
   deallocate(   dens2)
 contains

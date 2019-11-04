@@ -1,3 +1,7 @@
+! ESTE PROGRAMA ES EL QUE ANDA --- 
+
+
+
 !gfortran -fopenmp modulosVOIDS.f90 void_profiler_SPH.f90 pix_tools.f90 bit_manipulation.f90 healpix_types.f90 num_rec.f90 -o v.x
 module datas
   use healpix_types, only : DP, SP

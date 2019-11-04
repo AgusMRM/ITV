@@ -32,7 +32,7 @@ program cicjack_omp
  ! real(DP),parameter              :: rmin=1000.
   integer,parameter           :: nthread   =48, VOID=1373 
   integer,parameter           :: nside     = 100
-  integer,parameter           :: nbindist  =150
+  integer,parameter           :: nbindist  =200
   integer,parameter           :: nsideheal = 2
   real,parameter              :: rmax_vu=25. , rmin_vu=0.2
 
@@ -225,9 +225,8 @@ jmed=0.0; jsig=0.0; sig=0.0
                 jsig(i)=jsig(i)+(dens_jack(i,ijack)-jmed(i))**2
                 enddo
                 sig(i)=sqrt((47./48.)*jsig(i))
-                write(10,*) rad, dens2(1,i),jmed(i),sig(i)
+!                write(10,*) rad, dens2(1,i),jmed(i),sig(i)
  enddo
-stop
 
  j=0
  distlog = (0+ 0.5)*dbindist_vu + lrmin_vu

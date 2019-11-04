@@ -150,49 +150,54 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
                 head(bx,by,bz)       = i
         enddo 
 endsubroutine 
-subroutine contador(p,rmin,rmax,xc,yc,zc,mu,yhe,te,vv,mp,kcgs)
-        use modulos
-        implicit none
-        integer :: p
-        real :: d,xc,yc,zc,mu,yhe,te,vv,mp,kcgs,rmin,rmax,dmean,pi
-        pi=acos(-1.)
-        dmean=(3*(100**2)*(0.045))/(8*pi*(4.3e-9))*1e-10
-        p=0
-        do i=1,nall(0)
-                d=sqrt((pos(1,i)-xc)**2+(pos(2,i)-yc)**2+(pos(3,i)-zc)**2)       
-                if (d<rmax .and. d>rmin) then 
-                 mu=(1.0-yHe)/(1+yHe+ne(i))
-                 te=(5./3.-1.)*u(i)*vv*mu*mp/kcgs
-                 if (te<10**(3) .and. (dens(i)/dmean)<10**(0.)) p=p+1         
-                endif 
-        enddo
-        print*, p
-endsubroutine
-subroutine Id_Finder(dmn0,dmn,idp,snapshot,hist)
+!subroutine contador(nall,pos,ne,u,id,dens,p,rmin,rmax,xc,yc,zc,mu,yhe,te,vv,mp,kcgs)
+!        use modulos
+!        implicit none
+!        integer :: p
+ !       real :: d,xc,yc,zc,mu,yhe,te,vv,mp,kcgs,rmin,rmax,dmean,pi
+ !       pi=acos(-1.)
+ !       dmean=(3*(100**2)*(0.045))/(8*pi*(4.3e-9))*1e-10
+ !       p=0
+  !      do i=1,nall(0)
+  !              d=sqrt((pos(1,i)-xc)**2+(pos(2,i)-yc)**2+(pos(3,i)-zc)**2)       
+  !              if (d<rmax .and. d>rmin) then 
+  !               mu=(1.0-yHe)/(1+yHe+ne(i))
+   !              te=(5./3.-1.)*u(i)*vv*mu*mp/kcgs
+   !              if (te<10**(3) .and. (dens(i)/dmean)<10**(-1.3)) p=p+1         
+   !              if (te<10**(3) .and. (dens(i)/dmean)<10**(-1.3)) print*, id(i)        
+   !             endif 
+   !     enddo
+   !     print*, p
+!endsubroutine
+subroutine Id_Finder(snap,dmn0,dmn,idp,snapshot,hist,z)
 !        use modulos
         implicit none
         character(len=200) :: snumber
         integer:: s,p,particula,snapshot,dmn,i,j
         integer,dimension(dmn) :: idp
-        real,dimension(10,dmn) :: hist
+        real,dimension(snap,dmn) :: hist
         integer(4),dimension(0:5) ::nall
         real    :: pos(3,dmn0),vel(3,dmn0)
         integer*4,dimension(dmn0) :: id,idch,idgn
         real*4,dimension(dmn0)    :: mass, u, dens, ne, nh,hsml,sfr,abvc,temp
-        integer :: dmn1,dmn0
+        integer :: dmn1,dmn0,snap
+        real :: redshift
+        real,dimension(snap) :: z
         s = 51-snapshot
         write(snumber,'(I3)') snapshot
         id=0; pos=0; u=0; dens=0; ne=0
         call reader_parallel(snumber,snapshot,dmn0,pos,id,u,dens,ne,dmn1)
         p = 1
+        z(s)=redshift
         particula = idp(p)
-        do while (p/=dmn)
+        do while (p<=dmn)
                 do j=1,dmn1
                 if (id(j)==particula) then
                         hist(s,p) = dens(j)
                         p = p + 1
                         particula = idp(p)
-                if (mod(p,1000)==0)  print*, p,snapshot
+                if (mod(p,500)==0)  print*, p,snapshot
+!                print*, p,snapshot
                 endif      
                        
                         
