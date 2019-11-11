@@ -23,8 +23,8 @@ module modulos
 
    real*4,allocatable    :: pos(:,:),vel(:,:)
    integer*4,allocatable :: id(:),idch(:),idgn(:)
-   real*4, allocatable,dimension(:)    :: mass, u, rho, ne, &
-                                        nh,hsml,sfr,abvc 
+   real*4, allocatable,dimension(:)    :: mass, u, dens, ne, &
+                                        nh,hsml,sfr,abvc,temp 
    real*8 n0,mol,R,vx,vy,vz
    real :: prom1,prom2,prom3
        
@@ -35,8 +35,9 @@ module modulos
    real :: xmax,ymax,zmax
    integer(4) :: i1,i2
 
-   !logical :: ilogic
+   logical :: ilogic
 endmodule
+
 subroutine reader()
         use modulos
    write(snumber,'(I3)') SNAPSHOT
@@ -131,8 +132,8 @@ subroutine reader()
    read (1)u
    read (1)blckname,hwm
    write(*,*)'leyendo ',blckname,hwm-8
-   allocate(rho(int(hwm-8)/4))
-   read (1)rho
+   allocate(dens(int(hwm-8)/4))
+   read (1)dens
    read (1)blckname,hwm
    allocate(ne(int(hwm-8)/4))
    read(1)ne
@@ -191,18 +192,6 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
                 link(head(bx,by,bz)) = i
                 head(bx,by,bz)       = i
         enddo 
-endsubroutine 
-subroutine temperature(u,ne,temp)
-        implicit none
-        real:: u,ne,temp
-        real:: xh,yhe,mu,mp,kcgs,vv
-        xH=0.76
-        yHe=(1.0-xH)/(4.0*xH)
-        mu=(1.0-yHe)/(1+yHe+ne)
-        mp=1.6726E-24
-        kcgs=1.3807E-16
-        vv=1e10
-        temp=(5./3.-1.)*u*vv*mu*mp/kcgs
 endsubroutine 
 
 

@@ -11,12 +11,8 @@ program first
         use modulos
         use OMP_lib
         implicit none
-        integer,parameter::halos=71417-19, box=500, cell=50, VOID=1373
-        real,parameter ::  xbox=411.2170 ,ybox=162.1655 ,zbox=453.0553
-        !real,parameter ::  xbox=403.8960 ,ybox=459.8882 ,zbox=440.9021
-        character(len=200), parameter :: hpath='/mnt/is2/dpaz/ITV/S1373/halos/halos_50.ascii'
-        character(len=200) :: hfilename
-        integer :: ngas,ndm,ntid,nst
+        integer,parameter::halos=87780-19, box=500, cell=50
+        integer :: ngas,ndm,ntid,nst,o
         integer :: k,m,l,p,particles,part_gs,part_dm,part_st,part_td
         real,allocatable :: pos_gs(:,:), vel_gs(:,:)
         real,allocatable :: u_gs(:), mass_gs(:)
@@ -44,20 +40,12 @@ program first
         integer,allocatable :: link_st(:)
         integer:: bxg,byg,bzg,cand,bx,by,bz,bxdm,bydm,bzdm,partcls
         real :: rx,ry,rz,x,y,z,velx,vely,velz,G,L_dm,L_gs,L_st,L_td,espin_dm,ssfr,e,h
-        real :: hsml_gs,mas,maxhsml
-        real :: xe,ye,ze,dc,rv 
-        hfilename= trim(hpath)
-        open(13,file='/mnt/is2/fstasys/ITV/base09/voids/voids_new.dat')
-        do i=1,VOID-1
-        read(13,*)
-        enddo
-        read(13,*) rv,xe,ye,ze
-        xe=(xe-xbox+250)
-        ye=(ye-ybox+250)
-        ze=(ze-zbox+250) 
-
+        real :: hsml_gs,mas,maxhsml,dif,cond,hot,whim
   !-----------------------------------------------------------------------------     
         call reader()
+        !mas=0
+        mas=mass(1)
+!print*, mass(2), mas/real(nall(0))
   !-----------------------------------------------------------------------------
         ngas=nall(0)
         ndm=nall(1)
@@ -119,7 +107,7 @@ program first
 !---------------------------------------------------------------------------------------------------        
         rmax = 0
 
-        open(7,file=hfilename,status='unknown')  !saltear 19 filas
+        open(7,file='/mnt/is2/dpaz/ITV/R1198/halos/halos_50.ascii',status='unknown')  !saltear 19 filas
         do i=1,19
                 read(7,*)
         enddo
@@ -131,9 +119,8 @@ program first
         enddo 
         close(7)
 write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
-       
         abin    = real(box)/real(cell)
-        
+      ! stop 
         tot_gs  = 0
         head_gs = 0
         link_gs = 0
@@ -162,11 +149,11 @@ write(*,*) 'COMENZANDO CALCULOS'
 open(10,file='halosprop.dat',status='unknown')
 !$OMP PARALLEL DEFAULT (NONE) &
 !$OMP PRIVATE(x,y,z,velx,vely,velz,bx,by,bz,part_td,rho,ssfr,maxhsml,part_gs, &
-!$OMP part_dm,part_st, masa_gs,masa_dm,masa_st,dc ) &
+!$OMP part_dm,part_st, masa_gs,masa_dm,masa_st,o,dif,cond,hot,whim ) &
 !$OMP SHARED(pos_hl,vel_hl,id_hl,abin,tot_td,tot_gs,tot_dm,tot_st,head_td,head_gs, &
 !$OMP head_st,head_dm,pos_td,pos_dm,pos_gs,pos_st,vel_td,vel_gs,vel_st,vel_dm,link_td, &
 !$OMP link_gs,link_st,link_dm,rvir,mass_gs,mass_dm,mass_st,dens,sfr,hsml,ntid,ngas, &
-!$OMP nst,ndm,np_hl,spin,xe,ye,ze)
+!$OMP nst,ndm,np_hl,spin,u)
 
 !$OMP DO SCHEDULE(DYNAMIC)
         do i=1,halos                            
@@ -184,11 +171,12 @@ open(10,file='halosprop.dat',status='unknown')
                 part_td = 0 
                 call chequeo(x,y,z,bx,by,bz,part_td,ntid,cell,tot_td, &
                                head_td,pos_td,vel_td,link_td,rvir(i))
-                if (part_td>0) cycle
+               ! if (part_td>0) cycle
              !-----------------------------------
                 part_gs = 0 
                 call cuentasgas(x,y,z,velx,vely,velz,bx,by,bz,part_gs,ngas,cell,tot_gs, &
-                                head_gs,pos_gs,vel_gs,link_gs,rvir(i),dens,mass_gs,sfr,masa_gs,rho,ssfr,hsml,maxhsml) 
+                                head_gs,pos_gs,vel_gs,link_gs,rvir(i),dens,u,mass_gs,sfr,masa_gs,rho,ssfr,hsml,maxhsml, &
+                                dif,cond,whim,hot) 
                 part_dm = 0 
                 call cuentas(x,y,z,velx,vely,velz,bx,by,bz,part_dm,ndm,cell,tot_dm, &
                                head_dm,pos_dm,vel_dm,link_dm,rvir(i),mass_dm,masa_dm) 
@@ -197,8 +185,8 @@ open(10,file='halosprop.dat',status='unknown')
                                head_st,pos_st,vel_st,link_st,rvir(i),mass_st,masa_st)
 !                if (part_dm>25) then
                         !espin_dm = L_dm/(masa_dm*rvir(i)**2)*sqrt(G*masa_dm/(rvir(i)**3))
-                dc = sqrt((x-xe)**2+(y-ye)**2+(z-ze)**2)        
-                        write(10,*) dc,x,y,z,rvir(i),np_hl(i),part_gs,part_dm,part_st,masa_st,id_hl(i)
+                        write(10,*) x,y,z,rvir(i),np_hl(i),part_gs,part_dm,part_st,masa_st,id_hl(i), &
+                                dif/part_gs, cond/part_gs, whim/part_gs, cond/part_gs
 !                endif
               !  endif
         enddo
@@ -248,23 +236,30 @@ subroutine cuentas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,link,
                  enddo
                 enddo
 endsubroutine
-subroutine cuentasgas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,link,rvir,dens,mass,sfr,masa, &
-                                     rho,ssfr,hsml,maxhsml)
+subroutine cuentasgas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,link,rvir,dens,u,mass,sfr,masa, &
+                                     rho,ssfr,hsml,maxhsml,dif,cond,whim,hot)
         !use modulos
         implicit none
         integer:: cell,n
         integer,dimension(cell,cell,cell) :: tot, head
         real,dimension(3,n):: pos,vel 
-        real,dimension(n) :: mass,sfr,ne,nh,hsml,dens
+        real,dimension(n) :: mass,sfr,ne,nh,hsml,dens,u
         integer,dimension(n) :: link       
         integer ::j, o,k,m,l,bx,by,bz,p
         real::x,y,z,rx,ry,rz,rvir,masa,Lx,Ly,Lz,Ltot,vx,vy,vz,velx,vely,velz
-        real::ssfr,rho,maxhsml
+        real::ssfr,rho,maxhsml,xh,yhe,mp,kcgs,vv,mu,te
+        real::dif,cond,hot,whim,dgs
                 masa = 0
                 o    = 0
                 ssfr = 0
                 rho = 0
-                maxhsml = -999
+                dif=0; hot=0; cond=0; whim=0
+                xH=0.76
+                yHe=(1.0-xH)/(4.0*xH)
+                mp=1.6726E-24
+                kcgs=1.3807E-16
+                vv=1e10
+                dgs=(3*(100**2)*(0.045))/(8*3.14*(4.3e-9)*1e10)
                 do k = bx-1,bx+1
                  do m = by-1,by+1
                   do l = bz-1,bz+1
@@ -278,13 +273,17 @@ subroutine cuentasgas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,li
                                 vy = vel(2,p) - vely
                                 vz = vel(3,p) - velz
                                 if (sqrt(rx**2+ry**2+rz**2)<2*rvir*1e-3) then
-                                        Lx = Lx + ry*vz - rz*vy
-                                        Ly = Ly - rx*vz + rz*vx
-                                        Lz = Lz + rx*vy - ry*vx                 
+                                       
+                                        mu=(1.0-yHe)/(1+yHe+ne(p))
+                                        te=(5./3.-1.)*u(p)*vv*mu*(mp/kcgs)
+                                        if (te<1e5 .and.dens(p)/dgs<2)  dif = dif  + 1
+                                        if (te<1e5 .and.dens(p)/dgs>=2) cond= cond + 1
+                                        if (te>=1e5 .and.dens(p)/dgs<2)  whim= whim + 1
+                                        if (te>=1e5 .and.dens(p)/dgs>=2) hot = hot  + 1
+                                        
                                         masa = masa + mass(p)
                                         rho = rho + dens(p) 
                                         o = o + 1
-                                        
                                         if (hsml(p) > maxhsml) maxhsml = hsml(p)
                                 endif
                                p = link(p)       
