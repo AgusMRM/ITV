@@ -11,7 +11,7 @@ program first
         use modulos
         use OMP_lib
         implicit none
-        integer,parameter::halos=31666-20, box=89, cell=10
+        integer,parameter::halos=240685-20*8, box=89, cell=5
         character(len=200), parameter :: hpath='/mnt/is0/fstasys/512_b/halos/snap_50/halos_50.0.ascii'
         character(len=200) :: hfilename
         integer :: ngas,ndm,ntid,nst
@@ -33,11 +33,9 @@ program first
         real :: nn, rmax, rmx,abin,masa_dm,masa_gs,masa_st,masa_t,masa_td,rho
         integer,dimension(cell,cell,cell) :: tot_gs, head_gs
         integer,dimension(cell,cell,cell) :: tot_dm, head_dm
-        integer,dimension(cell,cell,cell) :: tot_td, head_td
         integer,dimension(cell,cell,cell) :: tot_st, head_st
         integer,allocatable :: link_gs(:)
         integer,allocatable :: link_dm(:)
-        integer,allocatable :: link_td(:)
         integer,allocatable :: link_st(:)
         integer:: bxg,byg,bzg,cand,bx,by,bz,bxdm,bydm,bzdm,partcls
         real :: rx,ry,rz,x,y,z,velx,vely,velz,G,L_dm,L_gs,L_st,L_td,espin_dm,ssfr,e,h
@@ -52,6 +50,7 @@ program first
         ndm=nall(1)
         nst=nall(4)
         allocate(mass_gs(nall(0)),mass_dm(nall(1)),mass_st(nall(4)))
+        allocate(link_gs(nall(0)),link_dm(nall(1)),link_st(nall(4)))
     !    allocate(pos_gs(3,ngas),vel_gs(3,ngas))
     !    allocate(u_gs(ngas),mass_gs(ngas),id_gs(ngas),link_gs(ngas)) 
     !    allocate(pos_dm(3,ndm),vel_dm(3,ndm))
@@ -111,16 +110,12 @@ program first
 write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
        
         abin    = real(box)/real(cell)
-print*, abin        
         tot_gs  = 0
         head_gs = 0
         link_gs = 0
         tot_dm  = 0       
         head_dm = 0
         link_dm = 0
-        tot_td  = 0
-        head_td = 0
-        link_td = 0
         tot_st  = 0
         head_st = 0
         link_st = 0

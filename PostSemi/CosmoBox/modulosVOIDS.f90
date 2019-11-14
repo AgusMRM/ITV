@@ -1,7 +1,7 @@
 module modulos
    implicit none
    integer, parameter :: SNAPSHOT = 50     ! number of dump
-   integer, parameter :: FILES = 8         ! number of files per snapshot
+   integer, parameter :: FILES = 1         ! number of files per snapshot
    character(len=200), parameter :: path='/mnt/is0/fstasys/512_b/out/snapdir_050'
    !character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/S1050/out'
    character(len=200) :: filename, snumber, fnumber
@@ -178,7 +178,6 @@ subroutine reader()
         jst = jst + 1
         age(jst) = age0(k)
    enddo
-   write(*,*) 'asd'
 
    nstart=nstart+npart(0)
 deallocate(pos0,vel0,id0,idgn0,idch0,mass0,u0,dens0,age0,hsml0,abvc0,ne0,nh0,sfr0)
@@ -193,7 +192,6 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
         real,dimension(3,n) :: pos
         integer,dimension(n) :: link
         real :: abin
- write(*,*) 'linked'       
         do i = 1,n
                bx = int(pos(1,i)/abin) + 1
                by = int(pos(2,i)/abin) + 1
