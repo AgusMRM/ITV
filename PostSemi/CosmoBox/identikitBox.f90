@@ -23,7 +23,7 @@ module modulos
    real*4,allocatable    :: pos_dm(:,:),vel_dm(:,:)
    integer*4,allocatable :: id(:),idch(:),idgn(:)
    real*4, allocatable,dimension(:):: mass, u, dens, ne,age, &
-                                        nh,hsml,sfr,abvc,temp 
+                                        nh,hsml,sfr,abvc 
    real*4,allocatable    :: pos0(:,:),vel0(:,:)
    integer*4,allocatable :: id0(:),idch0(:),idgn0(:)
    real*4, allocatable,dimension(:):: mass0, u0, dens0, ne0,age0, &
