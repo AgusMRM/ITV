@@ -12,7 +12,7 @@ program first
         use OMP_lib
         use modulos
         implicit none
-        integer,parameter:: box=89, cell=20
+        integer,parameter:: box=89, cell=30
         integer,parameter::nthread=10
         character(len=200), parameter :: hpath='/mnt/is0/fstasys/512_b/halos/snap_'
         !character(len=200), parameter :: hpath='/mnt/is0/fstasys/512_b/halos/snap_50/halos_50.0.ascii'
@@ -45,7 +45,8 @@ program first
         integer:: bxg,byg,bzg,cand,bx,by,bz,bxdm,bydm,bzdm,partcls
         real :: rx,ry,rz,x,y,z,velx,vely,velz,G,L_dm,L_gs,L_st,espin_dm,ssfr,e,h
         real :: hsml_gs,mas,maxhsml
-        real :: xe,ye,ze,dc,rv 
+        real :: rv
+        integer::npmin 
         
         allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
         allocate(tot_dm(cell,cell,cell), head_dm(cell,cell,cell))
@@ -111,8 +112,10 @@ program first
         do j=0,files-1
          write(fnumber,'(I1)') j
          hfilename=trim(hpath)//trim(snumber2)//'/halos_'//trim(snumber2)//'.'//trim(fnumber)//'.ascii'
-         !hfilename= trim(hpath)//trim(snumber2)//'/out_'//trim(snumber2)//'.list'
          open(7,file=hfilename,status='unknown')  !saltear 19 filas
+         do i=1,20
+                read(7,*)
+         enddo
          do i=1,500000  
                 read(7,*,end=17)      
                 k=k+1
@@ -121,13 +124,15 @@ program first
         close(7)
          write(*,*) k
 ! UNA VEZ CONTADAS LAS LINEAS K QUE CONTIENEN TODOS LOS ARCHIVOS DE HALOS, TENGO
-! QUE ALLOCATEAR LAS VARIABLES QUE DEPENDEN DE ESTA DIMENSION, RECORTANDO QUE EL
-! HEADER DE CADA FILE TIENE 20 LINEAS
-        halos=k-20*files
+! QUE ALLOCATEAR LAS VARIABLES QUE DEPENDEN DE ESTA DIMENSION
+        halos=k
+        write(*,*) 'halos',halos
         allocate(pos_hl(3,halos))
         allocate(rvir(halos))
         allocate(id_hl(halos),np_hl(halos))
         
+        npmin=2000000
+        k=1 
         do j=0,files-1
          write(fnumber,'(I1)') j
          hfilename=trim(hpath)//trim(snumber2)//'/halos_'//trim(snumber2)//'.'//trim(fnumber)//'.ascii'
@@ -135,14 +140,18 @@ program first
          do i=1,20
                 read(7,*)
          enddo
-        
          do i = 1, 500000
-                read(7,*,end=18) id_hl(i), np_hl(i), nn, nn, rvir(i), nn, nn, nn,pos_hl(1,i), pos_hl(2,i), pos_hl(3,i)
-                if (rvir(i) >= rmax) rmax = rvir(i)
+                read(7,*,end=22) id_hl(k), np_hl(k), nn, nn, rvir(k), nn, nn, nn,pos_hl(1,k), pos_hl(2,k), pos_hl(3,k)
+                if (rvir(k) >= rmax) rmax = rvir(k)
+                if (np_hl(k) < npmin) npmin = np_hl(k)
+                k=k+1
+                if (k==halos) print*, k
+                if (k==halos) goto 21
          enddo 
-         close(7)
-  18    enddo
+  22     enddo
+     21    close(7)
 write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
+write(*,*) 'MENOR NUMERO DE PARTICULAS:', npmin 
       !----------------------------------------------------------------------------------- 
       !----------------------------------------------------------------------------------- 
       !----------------------------------------------------------------------------------- 
@@ -166,20 +175,24 @@ write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
 !-------------------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------------------
 !call OMP_set_num_threads(nthread) 
-
+        do i=1,halos 
+          
+        if (np_hl(i)<20) print*, np_hl(i),i 
+        enddo
 write(*,*) 'COMENZANDO CALCULOS'
 !open(10,file='propiedades_halos.dat',status='unknown')
 open(10,file='halosprop.dat',status='unknown')
 !$OMP PARALLEL DEFAULT (NONE) &
 !$OMP PRIVATE(x,y,z,bx,by,bz,rho,ssfr,velx,vely,velz,maxhsml,part_gs, &
-!$OMP part_dm,part_st, masa_gs,masa_dm,masa_st,dc ) &
+!$OMP part_dm,part_st, masa_gs,masa_dm,masa_st ) &
 !$OMP SHARED(pos_hl,id_hl,abin,tot_gs,tot_dm,tot_st,head_gs, &
 !$OMP head_st,head_dm,pos_dm,pos_gs,pos_st,vel_gs,vel_st,vel_dm, &
 !$OMP link_gs,link_st,link_dm,rvir,mass_gs,mass_dm,mass_st,dens,sfr,hsml,ngas, &
-!$OMP nst,ndm,np_hl,xe,ye,ze,halos)
+!$OMP nst,ndm,np_hl,halos)
 
 !$OMP DO SCHEDULE(DYNAMIC)
-        do i=1,halos    
+        do i=1,halos   
+        if (np_hl(i)<20) print*, np_hl(i) 
                 x = pos_hl(1,i)
                 y = pos_hl(2,i)
                 z = pos_hl(3,i)
@@ -197,8 +210,7 @@ open(10,file='halosprop.dat',status='unknown')
                 part_st = 0 
                 call cuentas(x,y,z,velx,vely,velz,bx,by,bz,part_st,nst,cell,tot_st, &
                                head_st,pos_st,vel_st,link_st,rvir(i),mass_st,masa_st)
-                dc = sqrt((x-xe)**2+(y-ye)**2+(z-ze)**2)        
-                        write(10,*) dc,x,y,z,rvir(i),np_hl(i),part_gs,part_dm,part_st,masa_st,id_hl(i)
+                write(10,*) x,y,z,rvir(i),np_hl(i),part_gs,part_dm,part_st,masa_st,id_hl(i)
         enddo
  !$OMP END DO
  !$OMP BARRIER
