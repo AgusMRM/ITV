@@ -1,8 +1,8 @@
 module modulos
    implicit none
-   integer, parameter :: SNAPSHOT = 50     ! number of dump
-   integer, parameter :: FILES = 1         ! number of files per snapshot
-   character(len=200), parameter :: path='/mnt/is0/fstasys/512_b/out/snapdir_050'
+   integer, parameter :: SNAPSHOT = 40     ! number of dump
+   integer, parameter :: FILES = 8         ! number of files per snapshot
+   character(len=200), parameter :: path='/mnt/is0/fstasys/512_b/out/snapdir_040'
    !character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/S1050/out'
    character(len=200) :: filename, snumber, fnumber
    integer(4),dimension(0:5) :: npart, nall

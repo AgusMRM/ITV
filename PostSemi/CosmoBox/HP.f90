@@ -1,3 +1,4 @@
+!export OMP_STACKSIZE=16000000000 
 ! el programa arma una tabla con las propiedades de los halos
 
 ! E S T A      P A R A L E L I Z A D O 
@@ -11,29 +12,33 @@ program first
         use OMP_lib
         use modulos
         implicit none
-        integer,parameter::halos=240541-16, box=89, cell=5
+        integer,parameter:: box=89, cell=20
+        integer,parameter::nthread=10
         character(len=200), parameter :: hpath='/mnt/is0/fstasys/512_b/halos/snap_'
         !character(len=200), parameter :: hpath='/mnt/is0/fstasys/512_b/halos/snap_50/halos_50.0.ascii'
         character(len=200) :: hfilename,snumber2
-        integer :: ngas,ndm,nst
+        integer :: ngas,ndm,nst,halos
         integer :: k,m,l,p,particles,part_gs,part_dm,part_st
      !   real,allocatable :: pos_gs(:,:), vel_gs(:,:)
         real,allocatable :: u_gs(:), mass_gs(:)
-        integer,allocatable :: id_gs(:)
+      !  integer,allocatable :: id_gs(:)
      !   real,allocatable :: pos_dm(:,:), vel_dm(:,:)
         real,allocatable :: mass_dm(:)
-        integer,allocatable :: id_dm(:)
+      !  integer,allocatable :: id_dm(:)
      !   real,allocatable :: pos_td(:,:), vel_td(:,:)
       !  real,allocatable :: pos_st(:,:), vel_st(:,:)
         real,allocatable :: mass_st(:)
-        integer,allocatable :: id_st(:)
-        real,dimension(3,halos) :: pos_hl, vel_hl
-        real,dimension(halos) :: rvir,spin,lx_hl,ly_hl,lz_hl
-        integer,dimension(halos) :: id_hl,np_hl
+      !  integer,allocatable :: id_st(:)
+        real,allocatable,dimension(:,:) :: pos_hl
+        real,allocatable,dimension(:) :: rvir
+        integer,allocatable,dimension(:) :: id_hl,np_hl
         real :: nn, rmax, rmx,abin,masa_dm,masa_gs,masa_st,masa_t,rho
-        integer,dimension(cell,cell,cell) :: tot_gs, head_gs
-        integer,dimension(cell,cell,cell) :: tot_dm, head_dm
-        integer,dimension(cell,cell,cell) :: tot_st, head_st
+      !  integer,dimension(cell,cell,cell) :: tot_gs, head_gs
+      !  integer,dimension(cell,cell,cell) :: tot_dm, head_dm
+      !  integer,dimension(cell,cell,cell) :: tot_st, head_st
+        integer,allocatable,dimension(:,:,:) :: tot_gs, head_gs
+        integer,allocatable,dimension(:,:,:) :: tot_dm, head_dm
+        integer,allocatable,dimension(:,:,:) :: tot_st, head_st
         integer,allocatable :: link_gs(:)
         integer,allocatable :: link_dm(:)
         integer,allocatable :: link_st(:)
@@ -41,7 +46,10 @@ program first
         real :: rx,ry,rz,x,y,z,velx,vely,velz,G,L_dm,L_gs,L_st,espin_dm,ssfr,e,h
         real :: hsml_gs,mas,maxhsml
         real :: xe,ye,ze,dc,rv 
-
+        
+        allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
+        allocate(tot_dm(cell,cell,cell), head_dm(cell,cell,cell))
+        allocate(tot_st(cell,cell,cell), head_st(cell,cell,cell))
   !-----------------------------------------------------------------------------     
         call reader()
   !-----------------------------------------------------------------------------
@@ -58,7 +66,7 @@ program first
     !    allocate(mass_td(ntid),id_td(ntid),link_td(ntid)) 
     !    allocate(pos_st(3,nst),vel_st(3,nst))
     !    allocate(mass_st(nst),id_st(nst),link_st(nst)) 
-    !    write(*,*) 'PROGRAMA PRINCIPAL'
+        write(*,*) 'PROGRAMA PRINCIPAL'
         do i=1,nall(0)
      !           pos_gs(1,i) = pos(1,i)
      !           pos_gs(2,i) = pos(2,i)
@@ -95,25 +103,45 @@ program first
 !---------------------------------------------------------------------------------------------------        
 !---------------------------------------------------------------------------------------------------        
 !---------------------------------------------------------------------------------------------------        
+! PRIMERO ME FIJO CUANTAS LINEAS TIENEN EN TOTAL TODOS LOS ARCHIVOS DE LOS HALOS        
         rmax = 0
         print*, 'empiezo a leer halos'
         write(snumber2,'(I2)') SNAPSHOT
-     !   do j=0,files-1
-        
-     !   write(fnumber,'(I1)') j
-        hfilename= trim(hpath)//trim(snumber2)//'/out_'//trim(snumber2)//'.list'
-
-        open(7,file=hfilename,status='unknown')  !saltear 19 filas
-        do i=1,16
-                read(7,*)
-        enddo
-        do i = 1, halos
-                read(7,*) id_hl(i), np_hl(i), nn, nn, rvir(i), nn, nn, nn,pos_hl(1,i), pos_hl(2,i), pos_hl(3,i), &
-                                vel_hl(1,i), vel_hl(2,i), vel_hl(3,i),nn,nn,nn,nn,spin(i)
-                if (rvir(i) >= rmax) rmax = rvir(i)
-        enddo 
+        k=0
+        do j=0,files-1
+         write(fnumber,'(I1)') j
+         hfilename=trim(hpath)//trim(snumber2)//'/halos_'//trim(snumber2)//'.'//trim(fnumber)//'.ascii'
+         !hfilename= trim(hpath)//trim(snumber2)//'/out_'//trim(snumber2)//'.list'
+         open(7,file=hfilename,status='unknown')  !saltear 19 filas
+         do i=1,500000  
+                read(7,*,end=17)      
+                k=k+1
+         enddo
+17      enddo
         close(7)
-     !   enddo
+         write(*,*) k
+! UNA VEZ CONTADAS LAS LINEAS K QUE CONTIENEN TODOS LOS ARCHIVOS DE HALOS, TENGO
+! QUE ALLOCATEAR LAS VARIABLES QUE DEPENDEN DE ESTA DIMENSION, RECORTANDO QUE EL
+! HEADER DE CADA FILE TIENE 20 LINEAS
+        halos=k-20*files
+        allocate(pos_hl(3,halos))
+        allocate(rvir(halos))
+        allocate(id_hl(halos),np_hl(halos))
+        
+        do j=0,files-1
+         write(fnumber,'(I1)') j
+         hfilename=trim(hpath)//trim(snumber2)//'/halos_'//trim(snumber2)//'.'//trim(fnumber)//'.ascii'
+         open(7,file=hfilename,status='unknown')  !saltear 19 filas
+         do i=1,20
+                read(7,*)
+         enddo
+        
+         do i = 1, 500000
+                read(7,*,end=18) id_hl(i), np_hl(i), nn, nn, rvir(i), nn, nn, nn,pos_hl(1,i), pos_hl(2,i), pos_hl(3,i)
+                if (rvir(i) >= rmax) rmax = rvir(i)
+         enddo 
+         close(7)
+  18    enddo
 write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
       !----------------------------------------------------------------------------------- 
       !----------------------------------------------------------------------------------- 
@@ -137,25 +165,24 @@ write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
 
 !-------------------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------------------
+!call OMP_set_num_threads(nthread) 
+
 write(*,*) 'COMENZANDO CALCULOS'
 !open(10,file='propiedades_halos.dat',status='unknown')
 open(10,file='halosprop.dat',status='unknown')
 !$OMP PARALLEL DEFAULT (NONE) &
-!$OMP PRIVATE(x,y,z,velx,vely,velz,bx,by,bz,rho,ssfr,maxhsml,part_gs, &
+!$OMP PRIVATE(x,y,z,bx,by,bz,rho,ssfr,velx,vely,velz,maxhsml,part_gs, &
 !$OMP part_dm,part_st, masa_gs,masa_dm,masa_st,dc ) &
-!$OMP SHARED(pos_hl,vel_hl,id_hl,abin,tot_gs,tot_dm,tot_st,head_gs, &
+!$OMP SHARED(pos_hl,id_hl,abin,tot_gs,tot_dm,tot_st,head_gs, &
 !$OMP head_st,head_dm,pos_dm,pos_gs,pos_st,vel_gs,vel_st,vel_dm, &
 !$OMP link_gs,link_st,link_dm,rvir,mass_gs,mass_dm,mass_st,dens,sfr,hsml,ngas, &
-!$OMP nst,ndm,np_hl,spin,xe,ye,ze)
+!$OMP nst,ndm,np_hl,xe,ye,ze,halos)
 
 !$OMP DO SCHEDULE(DYNAMIC)
-        do i=1,halos                            
+        do i=1,halos    
                 x = pos_hl(1,i)
                 y = pos_hl(2,i)
                 z = pos_hl(3,i)
-                velx = vel_hl(1,i)
-                vely = vel_hl(2,i)
-                velz = vel_hl(3,i)
 
                 bx = int(x/abin) + 1
                 by = int(y/abin) + 1
@@ -170,16 +197,20 @@ open(10,file='halosprop.dat',status='unknown')
                 part_st = 0 
                 call cuentas(x,y,z,velx,vely,velz,bx,by,bz,part_st,nst,cell,tot_st, &
                                head_st,pos_st,vel_st,link_st,rvir(i),mass_st,masa_st)
-!                if (part_dm>25) then
-                        !espin_dm = L_dm/(masa_dm*rvir(i)**2)*sqrt(G*masa_dm/(rvir(i)**3))
                 dc = sqrt((x-xe)**2+(y-ye)**2+(z-ze)**2)        
                         write(10,*) dc,x,y,z,rvir(i),np_hl(i),part_gs,part_dm,part_st,masa_st,id_hl(i)
-!                endif
-              !  endif
         enddo
-       !$OMP END DO
-       !$OMP BARRIER
-       !$OMP END PARALLEL 
+ !$OMP END DO
+ !$OMP BARRIER
+ !$OMP END PARALLEL 
+        deallocate(pos_hl)
+        deallocate(rvir)
+        deallocate(id_hl,np_hl)
+        deallocate(mass_gs,mass_dm,mass_st)
+        deallocate(link_gs,link_dm,link_st)
+        deallocate(tot_gs, head_gs)
+        deallocate(tot_dm, head_dm)
+        deallocate(tot_st, head_st)
        close(10) 
 endprogram first
 
@@ -192,6 +223,7 @@ subroutine cuentas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,link,
         real,dimension(n) :: mass
         integer,dimension(n) :: link       
         integer ::j, o,k,m,l,bx,by,bz,p
+        integer :: bnx,bny,bnz
         real ::x,y,z,rx,ry,rz,rvir,masa,Lx,Ly,Lz,Ltot,vx,vy,vz,velx,vely,velz
                 masa = 0
                 o    = 0
@@ -201,9 +233,16 @@ subroutine cuentas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,link,
                 do k = bx-1,bx+1
                  do m = by-1,by+1
                   do l = bz-1,bz+1
-                        if (tot(k,m,l) == 0) cycle
-                        p = head(k,m,l)
-                        do j = 1,tot(k,m,l)
+                     bnx=k; bny=m; bnz=l
+                     if (k==0) bnx = cell
+                     if (k==cell+1) bnx = 1
+                     if (m==0) bny = cell
+                     if (m==cell+1) bny = 1
+                     if (l==0) bnz = cell
+                     if (l==cell+1) bnz = 1
+                        if (tot(bnx,bny,bnz) == 0) goto 3!cycle
+                        p = head(bnx,bny,bnz)
+                        do j = 1,tot(bnx,bny,bnz)
                                 rx = pos(1,p) - x 
                                 ry = pos(2,p) - y 
                                 rz = pos(3,p) - z
@@ -219,7 +258,7 @@ subroutine cuentas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,link,
                                 endif
                                p = link(p)       
                         enddo
-                  enddo      
+                  3 enddo      
                  enddo
                 enddo
 endsubroutine
@@ -233,6 +272,7 @@ subroutine cuentasgas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,li
         real,dimension(n) :: mass,sfr,ne,nh,hsml,dens
         integer,dimension(n) :: link       
         integer ::j, o,k,m,l,bx,by,bz,p
+        integer :: bnx,bny,bnz
         real::x,y,z,rx,ry,rz,rvir,masa,Lx,Ly,Lz,Ltot,vx,vy,vz,velx,vely,velz
         real::ssfr,rho,maxhsml
                 masa = 0
@@ -243,9 +283,16 @@ subroutine cuentasgas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,li
                 do k = bx-1,bx+1
                  do m = by-1,by+1
                   do l = bz-1,bz+1
-                        if (tot(k,m,l) == 0) cycle
-                        p = head(k,m,l)
-                        do j = 1,tot(k,m,l)
+                     bnx=k; bny=m; bnz=l
+                     if (k==0) bnx = cell
+                     if (k==cell+1) bnx = 1
+                     if (m==0) bny = cell
+                     if (m==cell+1) bny = 1
+                     if (l==0) bnz = cell
+                     if (l==cell+1) bnz = 1
+                        if (tot(bnx,bny,bnz) == 0) goto 2 !cycle
+                        p = head(bnx,bny,bnz)
+                        do j = 1,tot(bnx,bny,bnz)
                                 rx = pos(1,p) - x 
                                 ry = pos(2,p) - y 
                                 rz = pos(3,p) - z
@@ -264,7 +311,7 @@ subroutine cuentasgas(x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,li
                                 endif
                                p = link(p)       
                         enddo
-                  enddo      
+                  2 enddo      
                  enddo
                 enddo
                 rho=rho/real(o)
