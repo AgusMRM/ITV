@@ -48,12 +48,13 @@ program first
         real :: rv
         integer::npmin 
         
+  !-----------------------------------------------------------------------------     
+        call reader()
+        stop
+  !-----------------------------------------------------------------------------
         allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
         allocate(tot_dm(cell,cell,cell), head_dm(cell,cell,cell))
         allocate(tot_st(cell,cell,cell), head_st(cell,cell,cell))
-  !-----------------------------------------------------------------------------     
-        call reader()
-  !-----------------------------------------------------------------------------
         ngas=nall(0)
         ndm=nall(1)
         nst=nall(4)
@@ -146,10 +147,10 @@ program first
                 if (np_hl(k) < npmin) npmin = np_hl(k)
                 k=k+1
                 if (k==halos) print*, k
-                if (k==halos) goto 21
+                if (k==halos) cycle
          enddo 
   22     enddo
-     21    close(7)
+        close(7)
 write(*,*) 'MAXIMO RADIO VIRIAL:',rmax*1e-3,'Mpc'
 write(*,*) 'MENOR NUMERO DE PARTICULAS:', npmin 
       !----------------------------------------------------------------------------------- 
@@ -191,7 +192,8 @@ open(10,file='halosprop.dat',status='unknown')
 !$OMP nst,ndm,np_hl,halos)
 
 !$OMP DO SCHEDULE(DYNAMIC)
-        do i=1,halos   
+        do i=1,halos  - 1       !SE LO PONGO PARA QUE NO ESCRIBA LINEA EN
+                                                !BLANCO.. REVISAR 
         if (np_hl(i)<20) print*, np_hl(i) 
                 x = pos_hl(1,i)
                 y = pos_hl(2,i)

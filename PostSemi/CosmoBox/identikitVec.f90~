@@ -68,9 +68,9 @@ subroutine reader()
    allocate(pos_st(3,nall(4)),vel_st(3,nall(4)))
    allocate(pos_dm(3,nall(1)),vel_dm(3,nall(1)))
    allocate(id(sum(nall)),idch(sum(nall)),idgn(sum(nall)),mass(sum(nall)))
-   allocate(u(nall(0)),dens(nall(0)),ne(nall(0)),nh(nall(0)),hsml(nall(0)))
-   allocate(sfr(nall(0)),abvc(nall(0)))
-   allocate(age(nall(4)))
+  ! allocate(u(nall(0)),dens(nall(0)),ne(nall(0)),nh(nall(0)),hsml(nall(0)))
+  ! allocate(sfr(nall(0)),abvc(nall(0)))
+  ! allocate(age(nall(4)))
    close(1)
 !--------------------------------------------------------------------------------------
 !--------------------------------------------------------------------------------------
@@ -195,6 +195,7 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
         real,dimension(3,n) :: pos
         integer,dimension(n) :: link
         real :: abin
+        print*, 1
         do i = 1,n
                bx = int(pos(1,i)/abin) + 1
                by = int(pos(2,i)/abin) + 1
@@ -209,6 +210,7 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
                tot(bx,by,bz) = tot(bx,by,bz) + 1
                head(bx,by,bz)   = i
        enddo
+        print*, 1
 
        do i = 1,n
                bx = int(pos(1,i)/abin) + 1

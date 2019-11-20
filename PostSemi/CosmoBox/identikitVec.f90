@@ -65,12 +65,12 @@ subroutine reader()
   !    print *,'Type=',i,'    Particles=', nall(i)
   ! end do
    allocate(pos_gs(3,nall(0)),vel_gs(3,nall(0)))
-   allocate(pos_st(3,nall(4)),vel_st(3,nall(4)))
-   allocate(pos_dm(3,nall(1)),vel_dm(3,nall(1)))
-   allocate(id(sum(nall)),idch(sum(nall)),idgn(sum(nall)),mass(sum(nall)))
-   allocate(u(nall(0)),dens(nall(0)),ne(nall(0)),nh(nall(0)),hsml(nall(0)))
-   allocate(sfr(nall(0)),abvc(nall(0)))
-   allocate(age(nall(4)))
+   allocate(pos_st(3,nall(4)))!,vel_st(3,nall(4)))
+   allocate(pos_dm(3,nall(1)))!,vel_dm(3,nall(1)))
+   allocate(id(sum(nall)))!,idch(sum(nall)),idgn(sum(nall)),mass(sum(nall)))
+  ! allocate(u(nall(0)),dens(nall(0)),ne(nall(0)),nh(nall(0)),hsml(nall(0)))
+  ! allocate(sfr(nall(0)),abvc(nall(0)))
+  ! allocate(age(nall(4)))
    close(1)
 !--------------------------------------------------------------------------------------
 !--------------------------------------------------------------------------------------
@@ -104,10 +104,10 @@ subroutine reader()
    ! The array PartPos(1:3,1:Ntot) will contain all these particles
 
    allocate(pos0(3,sum(npart)),vel0(3,sum(npart)))
-   allocate(id0(sum(npart)),idch0(sum(npart)),idgn0(sum(npart)),mass0(sum(npart)))
-   allocate(u0(npart(0)),dens0(npart(0)),ne0(npart(0)),nh0(npart(0)),hsml0(npart(0)))
-   allocate(sfr0(npart(0)),abvc0(npart(0)))
-   allocate(age0(npart(4)))
+   allocate(id0(sum(npart)))!,idch0(sum(npart)),idgn0(sum(npart)),mass0(sum(npart)))
+   !allocate(u0(npart(0)),dens0(npart(0)),ne0(npart(0)),nh0(npart(0)),hsml0(npart(0)))
+   !allocate(sfr0(npart(0)),abvc0(npart(0)))
+   !allocate(age0(npart(4)))
  !  print*, (3*sum(npart)*4), '<--------- 3*sum(nall)*4 '
    read (1)blckname,hwm
    read (1)pos0
@@ -118,40 +118,6 @@ subroutine reader()
    read (1)blckname,hwm
    read (1)id0
  !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)idch0
- !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)idgn0
- !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)mass0
- !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)u0
- !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)dens0
- !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)ne0
- !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)nh0
- !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)hsml0
- !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)sfr0
- !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)age0
- !  write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   read (1)abvc0
- !  write(*,*)'leyendo ',blckname,hwm-8
- !  print*, npart
    k=0
    do j=1,npart(0)
         k = k + 1
@@ -159,12 +125,12 @@ subroutine reader()
         pos_gs(1,jgs) = pos0(1,k)
         pos_gs(2,jgs) = pos0(2,k)
         pos_gs(3,jgs) = pos0(3,k)
-        vel_gs(1,jgs) = vel0(1,k)
-        vel_gs(2,jgs) = vel0(2,k)
-        vel_gs(3,jgs) = vel0(3,k)
-        dens(jgs)     = dens0(k)
-        u(jgs)        = u0(k)
-        sfr(jgs)      = sfr0(k)
+   !     vel_gs(1,jgs) = vel0(1,k)
+   !     vel_gs(2,jgs) = vel0(2,k)
+   !     vel_gs(3,jgs) = vel0(3,k)
+   !     dens(jgs)     = dens0(k)
+   !     u(jgs)        = u0(k)
+   !     sfr(jgs)      = sfr0(k)
              
    enddo
    k=0
@@ -172,18 +138,18 @@ subroutine reader()
         k = k + 1
         jdm = jdm + 1
         pos_dm(:,jdm) = pos0(:,j)
-        vel_dm(:,jdm) = vel0(:,j)
+ !       vel_dm(:,jdm) = vel0(:,j)
    enddo
    k=0
    do j=1+npart(0)+npart(1),npart(0)+npart(1)+npart(4)
         k = k + 1
         jst = jst + 1
         pos_st(:,jst) = pos0(:,j)
-        age(jst) = age0(k)
+  !      age(jst) = age0(k)
    enddo
 
    nstart=nstart+npart(0)
-deallocate(pos0,vel0,id0,idgn0,idch0,mass0,u0,dens0,age0,hsml0,abvc0,ne0,nh0,sfr0)
+deallocate(pos0,vel0,id0)!,idgn0,idch0,mass0,u0,dens0,age0,hsml0,abvc0,ne0,nh0,sfr0)
 close(1)
    enddo
 
@@ -195,6 +161,7 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
         real,dimension(3,n) :: pos
         integer,dimension(n) :: link
         real :: abin
+        print*, 1
         do i = 1,n
                bx = int(pos(1,i)/abin) + 1
                by = int(pos(2,i)/abin) + 1
@@ -209,6 +176,7 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
                tot(bx,by,bz) = tot(bx,by,bz) + 1
                head(bx,by,bz)   = i
        enddo
+        print*, 1
 
        do i = 1,n
                bx = int(pos(1,i)/abin) + 1

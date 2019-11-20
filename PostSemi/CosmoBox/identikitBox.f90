@@ -1,8 +1,9 @@
 module modulos
    implicit none
-   integer, parameter :: SNAPSHOT = 30     ! number of dump
+   integer, parameter :: SNAPSHOT = 50     ! number of dump
    integer, parameter :: FILES = 8         ! number of files per snapshot
-   character(len=200), parameter :: path='/mnt/is0/fstasys/512_b/out/snapdir_030'
+   character(len=200), parameter :: path='/mnt/is0/fstasys/512_b/out/snapdir_'!030'
+   !character(len=200), parameter :: path='/mnt/is0/fstasys/512_b/out/snapdir_030'
    !character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/S1050/out'
    character(len=200) :: filename, snumber, fnumber
    integer(4),dimension(0:5) :: npart, nall
@@ -49,7 +50,7 @@ subroutine reader()
           snumber(i:i)='0'
       end if
    end do
-   filename= trim(path)//'/snapshot_'//trim(snumber)//'.'//trim(fnumber)
+   filename= trim(path)//trim(snumber)//'/snapshot_'//trim(snumber)//'.'//trim(fnumber)
    print *,'opening...  '//filename
    ! now, read in the header
    open (1, file=filename, form='unformatted')
@@ -85,7 +86,8 @@ subroutine reader()
           snumber(i:i)='0'
       end if
    end do
-   filename= trim(path)//'/snapshot_'//trim(snumber)//'.'//trim(fnumber)
+   !filename= trim(path)//'/snapshot_'//trim(snumber)//'.'//trim(fnumber)
+   filename= trim(path)//trim(snumber)//'/snapshot_'//trim(snumber)//'.'//trim(fnumber)
   
    print *,'opening...  '//filename
    ! now, read in the header
@@ -169,13 +171,14 @@ subroutine reader()
    do j=1+npart(0),npart(0)+npart(1)
         k = k + 1
         jdm = jdm + 1
-        pos_dm(:,jdm) = pos0(:,k)
-        vel_dm(:,jdm) = vel0(:,k)
+        pos_dm(:,jdm) = pos0(:,j)
+        vel_dm(:,jdm) = vel0(:,j)
    enddo
    k=0
    do j=1+npart(0)+npart(1),npart(0)+npart(1)+npart(4)
         k = k + 1
         jst = jst + 1
+        pos_st(:,jst) = pos0(:,j)
         age(jst) = age0(k)
    enddo
 
@@ -192,6 +195,7 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
         real,dimension(3,n) :: pos
         integer,dimension(n) :: link
         real :: abin
+        print*, 1
         do i = 1,n
                bx = int(pos(1,i)/abin) + 1
                by = int(pos(2,i)/abin) + 1
@@ -206,6 +210,7 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
                tot(bx,by,bz) = tot(bx,by,bz) + 1
                head(bx,by,bz)   = i
        enddo
+        print*, 1
 
        do i = 1,n
                bx = int(pos(1,i)/abin) + 1
