@@ -50,7 +50,6 @@ program first
         
   !-----------------------------------------------------------------------------     
         call reader()
-        stop
   !-----------------------------------------------------------------------------
         allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
         allocate(tot_dm(cell,cell,cell), head_dm(cell,cell,cell))
@@ -172,6 +171,7 @@ write(*,*) 'MENOR NUMERO DE PARTICULAS:', npmin
         call linkedlist(ngas,abin,cell,pos_gs,head_gs,tot_gs,link_gs)
         write(*,*) 'LiNKEANDO ESTRELLAs'
         call linkedlist(nst,abin,cell,pos_st,head_st,tot_st,link_st)
+        print*, link_st
 
 !-------------------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------------------

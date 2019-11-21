@@ -2,7 +2,7 @@ program grid_mesh
         use modulos
         use OMP_lib
         implicit none
-        integer, parameter :: cell=300, vec=10, nd=2000
+        integer, parameter :: cell=600, vec=14,vec2=140, nd=1000
         real, parameter :: box=89
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
@@ -15,7 +15,7 @@ program grid_mesh
         integer,allocatable :: link_dm(:)
         integer,allocatable :: link_st(:)
         real :: abin
-        integer :: ndm, ngs, nst
+        integer :: ndm, ngs, nst,vec0,grid
 
         abin = box/real(cell)
         allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
@@ -46,13 +46,18 @@ program grid_mesh
      !************************************************************   
      !*********** VECTOR DE DISTANCIAS ***************************
     ! allocate(distance(nst))
-     open(12,file='vecinas.dat',status='unknown')
-    !do i=1,nst
-       call vecina(nd,ngs,pos_gs,vec,nst,pos_st,abin,cell,box,tot_gs,head_gs,link_gs)!,distance)
-       call vecina(nd,ndm,pos_dm,vec,nst,pos_st,abin,cell,box,tot_dm,head_dm,link_dm)!,distance)
+     open(12,file='vecinas_base_st.dat',status='unknown')
+     vec0=vec
+       call vecina(nd,nst,pos_st,vec0,nst,pos_st,abin,cell,box,tot_st,head_st,link_st)!,distance)
+     close(12)
+     open(12,file='vecinas_base_gs.dat',status='unknown')
+       call vecina(nd,ngs,pos_gs,vec2,nst,pos_st,abin,cell,box,tot_gs,head_gs,link_gs)!,distance)
+     close(12)
+     open(12,file='vecinas_base_dm.dat',status='unknown')
+       call vecina(nd,ndm,pos_dm,vec2,nst,pos_st,abin,cell,box,tot_dm,head_dm,link_dm)!,distance)
+     close(12)
        
     !enddo
-    close(12)
     ! deallocate(distance)
 endprogram grid_mesh
 subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
@@ -62,21 +67,22 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
         real :: x0,y0,z0,x,y,z,r,abin,box,dx,dy,dz
         real,dimension(3,n):: pos1
         real,dimension(3,ngs):: pos2
-        integer,dimension(n) :: link
+        integer,dimension(ngs) :: link
       !  real,dimension(n) :: d
         integer,dimension(cell,cell,cell):: head, tot
         real,allocatable :: dist(:)
-        integer :: r1
+        integer :: r1,vec0
         real    :: random
         cand = 0
         !d    = 0
-        l = 0 
+        l = 0
   !$OMP PARALLEL DEFAULT (NONE) &
   !$OMP PRIVATE (i,bx,by,bz,x,y,z,j,k,m,u,p,bxx,byy,bzz, &
-  !$OMP cand,dist,l,x0,y0,z0,dx,dy,dz,r,r1,random) &
+  !$OMP cand,dist,l,x0,y0,z0,dx,dy,dz,r,r1,random,vec0) &
   !$OMP SHARED (pos1,abin,tot,head,link,n,cell,vec,box,nd,pos2 )
   !$OMP DO SCHEDULE (DYNAMIC)
         do i=1,nd
+        vec0=vec 
                 l=0
                 cand=0
                 call random_number(random)
@@ -93,39 +99,6 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
                 if (by == cell+1) by=1
                 if (bz == 0)      bz=cell
                 if (bz == cell+1) bz=1
-                do j= bx-1,bx+1
-                 if (j == 0) then 
-                        bxx=cell
-                 elseif (j == cell+1) then
-                        bxx=1
-                 else
-                        bxx=j
-                 endif      
-                 do k= by-1,by+1
-                    if (k == 0) then
-                        byy=cell
-                    elseif (k == cell+1) then
-                        byy=1
-                    else
-                        byy=k
-                    endif  
-                 do m= bz-1,bz+1
-                    if (m == 0) then
-                        bzz=cell
-                    elseif (m == cell+1) then
-                        bzz=1
-                    else
-                        bzz=m
-                    endif
-                       cand = cand + tot(bxx,byy,bzz)
-                enddo
-                enddo 
-                enddo 
-                if (cand < vec) then
-                        print*, 'HAY:',cand,'vecinas' 
-                        go to 2
-                endif
-                allocate(dist(cand))
            !---------------------------------------     
                 do j= bx-1,bx+1
                  if (j == 0) then 
@@ -165,9 +138,17 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
                         if (dx > box/2.) dx = box - dx
                         if (dy > box/2.) dy = box - dy
                         if (dz > box/2.) dz = box - dz
-
                         r  = sqrt(dx**2+dy**2+dz**2)
-                        dist(l) = r
+                        if (r<dist(vec)) then
+                                do i=vec,1
+                                if (r<dist(i-1))then
+                                       dist(i)=r
+                                       do ii=i,vec
+                                       dist(ii)=dist(ii+1)
+                                       enddo 
+                                endif
+                                enddo
+                        endif        
                         p = link(p)
                     enddo
                  enddo    
@@ -176,9 +157,9 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
                   l = 0
                   call orden(cand,dist)
                  ! d(i) = dist(vec) 
-                  write(12,*) x, y,z, dist(vec) 
+                  write(12,*) x, y,z, dist(vec0), vec0 
                   deallocate(dist)  
-        2          cand = 0
+                  cand = 0
         enddo
    !$OMP END DO
    !$OMP BARRIER

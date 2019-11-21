@@ -1,0 +1,6 @@
+program asdsa
+    integer ::i
+    do i=10,1
+        print*, i
+    enddo
+endprogram

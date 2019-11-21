@@ -176,7 +176,6 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
                tot(bx,by,bz) = tot(bx,by,bz) + 1
                head(bx,by,bz)   = i
        enddo
-        print*, 1
 
        do i = 1,n
                bx = int(pos(1,i)/abin) + 1

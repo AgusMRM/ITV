@@ -2,7 +2,7 @@ program grid_mesh
         use modulos
         use OMP_lib
         implicit none
-        integer, parameter :: cell=300, vec=10, nd=2000
+        integer, parameter :: cell=300, vec=10, nd=1000
         real, parameter :: box=89
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
@@ -37,8 +37,8 @@ program grid_mesh
         tot_st  = 0
         head_st = 0
         link_st = 0
-        write(*,*) 'LiNKEANDO DM'
-        call linkedlist(ndm,abin,cell,pos_dm,head_dm,tot_dm,link_dm)
+        !write(*,*) 'LiNKEANDO DM'
+        !call linkedlist(ndm,abin,cell,pos_dm,head_dm,tot_dm,link_dm)
         write(*,*) 'LiNKEANDO GAS'
         call linkedlist(ngs,abin,cell,pos_gs,head_gs,tot_gs,link_gs)
         write(*,*) 'LiNKEANDO ESTRELLAs'
@@ -49,7 +49,6 @@ program grid_mesh
      open(12,file='vecinas.dat',status='unknown')
     !do i=1,nst
        call vecina(nd,ngs,pos_gs,vec,nst,pos_st,abin,cell,box,tot_gs,head_gs,link_gs)!,distance)
-       call vecina(nd,ndm,pos_dm,vec,nst,pos_st,abin,cell,box,tot_dm,head_dm,link_dm)!,distance)
        
     !enddo
     close(12)
