@@ -50,7 +50,6 @@ program first
         
   !-----------------------------------------------------------------------------     
         call reader()
-        stop
   !-----------------------------------------------------------------------------
         allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
         allocate(tot_dm(cell,cell,cell), head_dm(cell,cell,cell))

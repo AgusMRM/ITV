@@ -2,7 +2,7 @@ program grid_mesh
         use modulos
         use OMP_lib
         implicit none
-        integer, parameter :: cell=600, vec=14,vec2=140, nd=1000
+        integer, parameter :: cell=600, vec=14,vec2=140, nd=10000
         real, parameter :: box=89
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
@@ -62,7 +62,7 @@ program grid_mesh
 endprogram grid_mesh
 subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
         implicit none
-        integer :: i,j,k,m,cand,bxx,byy,bzz,u,p,l
+        integer :: i,j,k,m,cand,bxx,byy,bzz,u,p,l,ii,o,q
         integer :: bx,by,bz,n,cell,vec,nd,ngs
         real :: x0,y0,z0,x,y,z,r,abin,box,dx,dy,dz
         real,dimension(3,n):: pos1
@@ -70,19 +70,21 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
         integer,dimension(ngs) :: link
       !  real,dimension(n) :: d
         integer,dimension(cell,cell,cell):: head, tot
-        real,allocatable :: dist(:)
+        real,dimension(vec) :: dist
         integer :: r1,vec0
-        real    :: random
+        real    :: random,dist_vieja, dist_vieja2
         cand = 0
         !d    = 0
         l = 0
   !$OMP PARALLEL DEFAULT (NONE) &
   !$OMP PRIVATE (i,bx,by,bz,x,y,z,j,k,m,u,p,bxx,byy,bzz, &
-  !$OMP cand,dist,l,x0,y0,z0,dx,dy,dz,r,r1,random,vec0) &
+  !$OMP cand,dist,l,x0,y0,z0,dx,dy,dz,r,r1,random,vec0, &
+  !$OMP dist_vieja, dist_vieja2) &
   !$OMP SHARED (pos1,abin,tot,head,link,n,cell,vec,box,nd,pos2 )
   !$OMP DO SCHEDULE (DYNAMIC)
         do i=1,nd
-        vec0=vec 
+        vec0=vec
+        dist=9999999
                 l=0
                 cand=0
                 call random_number(random)
@@ -139,16 +141,22 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
                         if (dy > box/2.) dy = box - dy
                         if (dz > box/2.) dz = box - dz
                         r  = sqrt(dx**2+dy**2+dz**2)
-                        if (r<dist(vec)) then
-                                do i=vec,1
-                                if (r<dist(i-1))then
-                                       dist(i)=r
-                                       do ii=i,vec
-                                       dist(ii)=dist(ii+1)
-                                       enddo 
-                                endif
-                                enddo
-                        endif        
+                        call ordenador(r,vec0,dist)
+      !--------------------------------------------------------------------------                  
+                  !      if (r<dist(vec)) then
+                  !              do o=1,vec0
+                  !              if (r>dist(vec-o) .and. r<= dist(vec+1-o)) then        
+                  !                      dist_vieja=dist(o)
+                  !                      dist(o)=r
+                  !                      do q=o+1,vec0
+                  !                      dist_vieja2=dist(q)
+                  !                      dist(q)=dist_vieja
+                  !                      dist_vieja=dist_vieja2
+                  !                      enddo
+                  !              endif
+                  !              enddo
+                  !      endif        
+      !--------------------------------------------------------------------------                  
                         p = link(p)
                     enddo
                  enddo    
@@ -158,13 +166,45 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
                   call orden(cand,dist)
                  ! d(i) = dist(vec) 
                   write(12,*) x, y,z, dist(vec0), vec0 
-                  deallocate(dist)  
                   cand = 0
         enddo
    !$OMP END DO
    !$OMP BARRIER
    !$OMP END PARALLEL
-endsubroutine        
+endsubroutine     
+subroutine ordenador(r,vec,dist)
+    implicit none
+    ! integer,parameter :: vec=3,n=20 
+    integer ::i,o,q,vec,activador
+    real,dimension(vec) ::dist
+    real :: r,dist_vieja, dist_vieja2
+   ! dist=99999
+    activador=1
+    if (r<dist(vec)) then
+            do o=1,vec-1      
+                if (r>dist(vec-o) .and. r<= dist(vec+1-o)) then   
+                   activador=0     
+                    dist_vieja=dist(vec-o)
+                    dist(vec-o)=r
+                    do q=vec-o,vec
+                    dist_vieja2=dist(q)
+                    dist(q)=dist_vieja
+                    dist_vieja=dist_vieja2
+                    enddo
+                    goto 4
+                endif
+            enddo
+      4      if (activador==1) then
+                    dist_vieja=dist(1)
+                dist(1)=r    
+                    do q=2,vec
+                    dist_vieja2=dist(q)
+                    dist(q)=dist_vieja
+                    dist_vieja=dist_vieja2
+                    enddo
+            endif    
+    endif   
+endsubroutine
 SUBROUTINE ORDEN(NELEM,ARREG)
 ! -----------------------------------------------------
 !ORDENACION POR BURBUJA ("buble sort") de un arreglo

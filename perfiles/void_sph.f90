@@ -186,7 +186,8 @@ l=1
                             if(dist < Hsml(it))then
  !                                   print*, dist, hsml(it)
                                call KernelGadget(dist, hsml(it),fac) 
-                               dens_pix(ipx) = dens_pix(ipx) +mass(it)*fac
+                               dens_pix(ipx) = dens_pix(ipx)+mass(it)*fac/hsml(it)**3
+                              ! dens_pix(ipx) = dens_pix(ipx)+mass(it)*fac
                             endif
                             if(it == lirst(iix,iiy,iiz)) exit vecino
                           end do vecino

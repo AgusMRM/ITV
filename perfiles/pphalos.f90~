@@ -1,6 +1,6 @@
 program first0
         implicit none
-        integer,parameter :: bines=30, VOID=1198,halos= 105390  !106409 
+        integer,parameter :: bines=30, VOID=1373,halos= 71417-19  !106409 
         real,parameter :: rmax=35,rmin=.1, pi=acos(-1.),corte=20
         real :: abin,d,vol,rm, rand,minmass,maxmass,minsfr,maxsfr,abin2,rad,r0
         integer :: bin,bin2  
@@ -12,7 +12,9 @@ program first0
         real,dimension(3,halos) :: pos
         integer,dimension(halos) :: pnum
   !-----------------------------------------------------------------------------    
- open(24,file='/mnt/is2/fstasys/ITV/base09/rockstar/halos_0.5.ascii',status='unknown',action='read')
+ !open(24,file='/mnt/is2/fstasys/ITV/base09/rockstar/halos_0.5.ascii',status='unknown',action='read')
+ !open(24,file='/home/arodriguez/halos.dat',status='unknown',action='read')
+ open(24,file='/mnt/is2/dpaz/ITV/S1373/halos/halos_50.ascii',status='unknown',action='read')
  do i=1,20
         read(24,*)
  enddo

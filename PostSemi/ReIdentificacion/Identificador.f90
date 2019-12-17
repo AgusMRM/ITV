@@ -56,7 +56,7 @@ program IdEnTiFiCaToR
         dmean=halos_tot/(500**3)
         print*, dmean
         r_void=0
-        do j=1,5000000
+        do j=1,100000
               !  write(*,*) x0,y0,z0
                 cont=0
                 do i=1,dimen
