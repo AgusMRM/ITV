@@ -3,7 +3,7 @@ program grid_mesh
         use OMP_lib
         implicit none
         integer, parameter :: cell=100, vec=5,vec2=50 ,nd=2000
-        real, parameter :: box=200, rmax=30.0, rmin=22! elegir el lado del box que voy a armar
+        real, parameter :: box=200, rmax=32.0, rmin=25! elegir el lado del box que voy a armar
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
         real, allocatable :: distance(:)

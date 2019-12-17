@@ -5,7 +5,7 @@
 
 !---------------------------------------------------------------------
 ! hay que compilar el modulo y subroutina de el archivo modulos.f90
-! uso:  gfortran -fopenmp -o pp modulosVOIDS.f90 HP.f90 
+! ej:  gfortran -o pp modulos.f90 program.f90 
 
 program first
         use modulos

@@ -169,7 +169,7 @@ endsubroutine
    !     enddo
    !     print*, p
 !endsubroutine
-subroutine Id_Finder(dmn0,dmn,idp,snapshot,hist,z)
+subroutine Id_Finder(snap,dmn0,dmn,idp,snapshot,hist,z)
 !        use modulos
         implicit none
         character(len=200) :: snumber
@@ -180,7 +180,7 @@ subroutine Id_Finder(dmn0,dmn,idp,snapshot,hist,z)
         real    :: pos(3,dmn0),vel(3,dmn0)
         integer*4,dimension(dmn0) :: id,idch,idgn
         real*4,dimension(dmn0)    :: mass, u, dens, ne, nh,hsml,sfr,abvc,temp
-        integer :: dmn1,dmn0
+        integer :: dmn1,dmn0,snap
         real :: redshift
         real,dimension(snap) :: z
         s = 51-snapshot
