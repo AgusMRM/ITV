@@ -11,11 +11,11 @@ program first
         use modulos
         use OMP_lib
         implicit none
-        integer,parameter::halos=71417 -19, box=500, cell=50, radvr=1,VOID=1373
-      !  integer,parameter::halos=87780-19, box=500, cell=50, radvr=1,VOID=1198
-       ! real,parameter ::  xbox=411.2170 ,ybox=162.1655 ,zbox=453.0553
-        real,parameter ::  xbox=403.8960 ,ybox=459.8882 ,zbox=440.9021
-        character(len=200), parameter :: hpath='/mnt/is2/dpaz/ITV/S1373/halos/halos_50.ascii'
+       ! integer,parameter::halos=71417 -19, box=500, cell=50, radvr=2,VOID=1373
+       ! real,parameter ::  xbox=403.8960 ,ybox=459.8882 ,zbox=440.9021
+        integer,parameter::halos=87780-19, box=500, cell=50, radvr=1,VOID=1198
+        real,parameter ::  xbox=411.2170 ,ybox=162.1655 ,zbox=453.0553
+        character(len=200), parameter :: hpath='/mnt/is2/dpaz/ITV/R1198/halos/halos_50.ascii'
         character(len=200) :: hfilename
         integer :: ngas,ndm,ntid,nst
         integer :: k,m,l,p,particles,part_gs,part_dm,part_st,part_td
@@ -47,7 +47,7 @@ program first
         integer:: bxg,byg,bzg,cand,bx,by,bz,bxdm,bydm,bzdm,partcls
         real :: rx,ry,rz,x,y,z,velx,vely,velz,G,L_dm,L_gs,L_st,L_td,espin_dm,ssfr,e,h
         real :: hsml_gs,mas,maxhsml
-        real :: xe,ye,ze,dc,rv 
+        real :: xe,ye,ze,dc,rv,te 
         hfilename= trim(hpath)
         open(13,file='/mnt/is2/fstasys/ITV/base09/voids/voids_new.dat')
         do i=1,VOID-1
@@ -165,11 +165,11 @@ write(*,*) 'COMENZANDO CALCULOS'
 open(10,file='halosprop1.dat',status='unknown')
 !$OMP PARALLEL DEFAULT (NONE) &
 !$OMP PRIVATE(x,y,z,velx,vely,velz,bx,by,bz,part_td,rho,ssfr,maxhsml,part_gs, &
-!$OMP part_dm,part_st, masa_gs,masa_dm,masa_st,dc,l_dm ) &
+!$OMP part_dm,part_st, masa_gs,masa_dm,masa_st,dc,l_dm,te ) &
 !$OMP SHARED(pos_hl,vel_hl,id_hl,abin,tot_td,tot_gs,tot_dm,tot_st,head_td,head_gs, &
 !$OMP head_st,head_dm,pos_td,pos_dm,pos_gs,pos_st,vel_td,vel_gs,vel_st,vel_dm,link_td, &
 !$OMP link_gs,link_st,link_dm,rvir,mass_gs,mass_dm,mass_st,dens,sfr,hsml,ntid,ngas, &
-!$OMP nst,ndm,np_hl,spin,xe,ye,ze,lx_hl,ly_hl,lz_hl)
+!$OMP nst,ndm,np_hl,spin,xe,ye,ze,lx_hl,ly_hl,lz_hl,ne,u)
 
 !$OMP DO SCHEDULE(DYNAMIC)
         do i=1,halos                            
@@ -191,7 +191,8 @@ open(10,file='halosprop1.dat',status='unknown')
              !-----------------------------------
                 part_gs = 0 
                 call cuentasgas(radvr,x,y,z,velx,vely,velz,bx,by,bz,part_gs,ngas,cell,tot_gs, &
-                                head_gs,pos_gs,vel_gs,link_gs,rvir(i),dens,mass_gs,sfr,masa_gs,rho,ssfr,hsml,maxhsml) 
+                                head_gs,pos_gs,vel_gs,link_gs,rvir(i),dens,mass_gs,sfr,masa_gs,rho,ssfr,hsml,maxhsml, &
+                                te,ne,u) 
                 part_dm = 0 
                 call cuentas(radvr,x,y,z,velx,vely,velz,bx,by,bz,part_dm,ndm,cell,tot_dm, &
                                head_dm,pos_dm,vel_dm,link_dm,rvir(i),mass_dm,masa_dm) 
@@ -202,7 +203,7 @@ open(10,file='halosprop1.dat',status='unknown')
                         !espin_dm = L_dm/(masa_dm*rvir(i)**2)*sqrt(G*masa_dm/(rvir(i)**3))
                 dc = sqrt((x-xe)**2+(y-ye)**2+(z-ze)**2)       
                 L_dm = sqrt(lx_hl(i)**2+ly_hl(i)**2+lz_hl(i)**2) 
-                        write(10,*) dc,x,y,z,rvir(i),np_hl(i),part_gs,part_dm,part_st,masa_st,id_hl(i),spin(i),l_dm
+                        write(10,*) dc,x,y,z,rvir(i),np_hl(i),part_gs,part_dm,part_st,masa_st,id_hl(i),spin(i),l_dm,te
 !                endif
               !  endif
         enddo
@@ -252,22 +253,31 @@ subroutine cuentas(radvr,x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel
                 enddo
 endsubroutine
 subroutine cuentasgas(radvr,x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,vel,link,rvir,dens,mass,sfr,masa, &
-                                     rho,ssfr,hsml,maxhsml)
+                                     rho,ssfr,hsml,maxhsml,te,ne,u)
         !use modulos
         implicit none
         integer:: cell,n
         integer,dimension(cell,cell,cell) :: tot, head
         real,dimension(3,n):: pos,vel 
-        real,dimension(n) :: mass,sfr,ne,nh,hsml,dens
+        real,dimension(n) :: mass,sfr,ne,nh,hsml,dens,u
         integer,dimension(n) :: link       
         integer ::j, o,k,m,l,bx,by,bz,p,radvr
         real::x,y,z,rx,ry,rz,rvir,masa,Lx,Ly,Lz,Ltot,vx,vy,vz,velx,vely,velz
-        real::ssfr,rho,maxhsml
+        real::ssfr,rho,maxhsml,te
+        real::xh,yhe,mp,kcgs,vv,mu
                 masa = 0
                 o    = 0
                 ssfr = 0
                 rho = 0
                 maxhsml = -999
+                xH=0.76
+                yHe=(1.0-xH)/(4.0*xH)
+              !  mu0=(1.0-yHe)/(1+yHe+ne0)
+                mp=1.6726E-24
+                kcgs=1.3807E-16
+                vv=1e10
+                te=0
+              !  te0=(5./3.-1.)*u0*vv*mu0*mp/kcgs
                 do k = bx-1,bx+1
                  do m = by-1,by+1
                   do l = bz-1,bz+1
@@ -287,8 +297,9 @@ subroutine cuentasgas(radvr,x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,
                                         masa = masa + mass(p)
                                         rho = rho + dens(p) 
                                         o = o + 1
-                                        
-                                        if (hsml(p) > maxhsml) maxhsml = hsml(p)
+                                        mu=(1.0-yhe)/(1+yhe+ne(p))
+                                        te= te + (5./3.-1)*u(p)*vv*mu*mp/kcgs
+                                       ! if (hsml(p) > maxhsml) maxhsml = hsml(p)
                                 endif
                                p = link(p)       
                         enddo
@@ -296,6 +307,7 @@ subroutine cuentasgas(radvr,x,y,z,velx,vely,velz,bx,by,bz,o,n,cell,tot,head,pos,
                  enddo
                 enddo
                 rho=rho/real(o)
+                if (o>0) te=te/real(o)
 endsubroutine
 subroutine chequeo(x,y,z,bx,by,bz,o,n,cell,tot,head,pos,vel,link,rvir)
         !use modulos
