@@ -1,4 +1,6 @@
-! COMPILAR CON modV.f90 
+! COMPILAR CON modV_check.f90
+! ESTA VERSION ESTA ADAPTADA PARA CHEKEAR QUE ESTOY ORDENANDO CORRECTAMENTE LAS
+! PARTICULAS. 
 program grid_mesh
         use modulos
         use OMP_lib
@@ -79,47 +81,64 @@ program grid_mesh
         head_st = 0
         link_st = 0
         k=0
-        do i=1,nst
-                d=sqrt((pos_st(1,i)-xc)**2+(pos_st(2,i)-yc)**2+(pos_st(3,i)-zc)**2)
-                if (d<rmax .and. d>rmin) then
-                        k=k+1
-                endif
-        enddo
+    !    do i=1,nst
+    !            d=sqrt((pos_st(1,i)-xc)**2+(pos_st(2,i)-yc)**2+(pos_st(3,i)-zc)**2)
+    !            if (d<rmax .and. d>rmin) then
+    !                    k=k+1
+    !            endif
+    !    enddo
+        k=30
         allocate(pos_st2(3,k))
-        print*, 'gas particles in interests area:', k
+        print*, 'estot trabajando con particulas:', k
         nst2=k
         k=0
-        do i=1,nst
-                d=sqrt((pos_st(1,i)-xc)**2+(pos_st(2,i)-yc)**2+(pos_st(3,i)-zc)**2)
-                if (d<rmax .and. d>rmin) then
+        do i=1,nst2
+               ! d=sqrt((pos_st(1,i)-xc)**2+(pos_st(2,i)-yc)**2+(pos_st(3,i)-zc)**2)
+               ! if (d<rmax .and. d>rmin) then
                         k=k+1
                         pos_st2(1,k)=pos_st(1,i)
                         pos_st2(2,k)=pos_st(2,i)
-                        pos_st2(3,k)=pos_st(3,i)
-                endif
+                        pos_st2(3,k)=0 !pos_st(3,i) VOY A TRABAJAR EN 2D
+               ! endif
         enddo
+        !!!!!!me arme el vector con solo 30 particuals
+        open(27,file='particulas_check.dat',status='unknown')
+        do i=1,nst2
+
+                write(27,*) pos_st2(1,i),pos_st2(2,i), pos_st2(3,i)
+        enddo
+        close(27)
+       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
         write(*,*) 'LiNKEANDO GAS'
         call linkedlist(ngs,abin,cell,pos_gs,head_gs,tot_gs,link_gs)
         write(*,*) 'LiNKEANDO DARMATE'
         call linkedlist(ndm,abin,cell,pos_dm,head_dm,tot_dm,link_dm)
         write(*,*) 'LiNKEANDO ESTRELLAs'
-        call linkedlist(nst,abin,cell,pos_st,head_st,tot_st,link_st)
+        !----------------------------------------------------------
+        ! PARA ESTA ADAPTACION NECEISO SOLO LINKEAR MIS 30 PARTICULAS,
+        ! POR LO TANTO INGRESO EL pos_st2
+        
+        call linkedlist(nst2,abin,cell,pos_st2,head_st,tot_st,link_st)
+       print*, 'estrellas linkeadas' 
+        !----------------------------------------------------------
+        !----------------------------------------------------------
      !************************************************************   
      !*********** VECTOR DE DISTANCIAS ***************************
     ! allocate(distance(nst))
        write(*,*) 'VECINAS STARS'
      open(12,file='vecinas_void_st.dat',status='unknown')
-       call vecina(nd,nst,pos_st,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st)!,distance)
+       call vecina(nd,nst2,pos_st2,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st)!,distance)
      close(12)
-       abin=box/real(cell)
-       write(*,*) 'VECINAS GAS'
-     open(12,file='vecinas_void_gs.dat',status='unknown')
-       call vecina(nd,ngs,pos_gs,vec2,nst2,pos_st2,abin,cell,box,tot_gs,head_gs,link_gs)!,distance)
-     close(12)
-       write(*,*) 'VECINAS DM'
-     open(12,file='vecinas_void_dm.dat',status='unknown')
-       call vecina(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm)!,distance)
-     close(12)
+     !  abin=box/real(cell)
+     !  write(*,*) 'VECINAS GAS'
+     !open(12,file='vecinas_void_gs.dat',status='unknown')
+     !  call vecina(nd,ngs,pos_gs,vec2,nst2,pos_st2,abin,cell,box,tot_gs,head_gs,link_gs)!,distance)
+     !close(12)
+     !  write(*,*) 'VECINAS DM'
+     !open(12,file='vecinas_void_dm.dat',status='unknown')
+     !  call vecina(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm)!,distance)
+     !close(12)
        
     !enddo
     ! deallocate(distance)
@@ -145,7 +164,7 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
   !$OMP cand,dist,l,x0,y0,z0,dx,dy,dz,r,vec0,o,q,dist_vieja,dist_vieja2) &
   !$OMP SHARED (pos1,abin,tot,head,link,n,cell,vec,box,nd,pos2 )
   !$OMP DO SCHEDULE (DYNAMIC)
-        do i=1,n
+        do i=1,1
         !write(*,*) ii
                 dist=999999
                 vec0=vec
@@ -202,6 +221,7 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
                         if (dz > box/2.) dz = box - dz
 
                         r  = sqrt(dx**2+dy**2+dz**2)
+                        print*, r
                         call ordenador(r,vec0,dist)
       !--------------------------------------------------------------------------                  
 !                        if (r<dist(vec)) then
@@ -231,6 +251,7 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
    !$OMP END DO
    !$OMP BARRIER
    !$OMP END PARALLEL
+   write(*,*) 'El vector de distancias es: ', dist
 endsubroutine        
 subroutine ordenador(r,vec,dist)
     implicit none

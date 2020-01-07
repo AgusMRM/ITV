@@ -48,6 +48,10 @@ program first
         real :: rx,ry,rz,x,y,z,velx,vely,velz,G,L_dm,L_gs,L_st,L_td,espin_dm,ssfr,e,h
         real :: hsml_gs,mas,maxhsml
         real :: xe,ye,ze,dc,rv,te 
+  !-----------------------------------------------------------------------------     
+        call reader()
+        stop
+  !-----------------------------------------------------------------------------
         hfilename= trim(hpath)
         open(13,file='/mnt/is2/fstasys/ITV/base09/voids/voids_new.dat')
         do i=1,VOID-1
@@ -58,10 +62,6 @@ program first
         ye=(ye-ybox+250)
         ze=(ze-zbox+250) 
 
-  !-----------------------------------------------------------------------------     
-        call reader()
-        stop
-  !-----------------------------------------------------------------------------
         ngas=nall(0)
         ndm=nall(1)
         ntid=nall(2)

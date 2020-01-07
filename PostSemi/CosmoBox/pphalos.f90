@@ -2,8 +2,8 @@
 ! ej:  gfortran -o pp modV.f90 ppresi.f90 
 program first
         implicit none
-        integer,parameter :: bines=25, halos=87780-19,pcorte=760,VOID=1198
-       ! integer,parameter :: bines=25, halos=71417-19,pcorte=2*615,VOID=1373
+        integer,parameter :: bines=100, halos=87780-19,pcorte=1231,VOID=1198
+       ! integer,parameter :: bines=100, halos=71417-19,pcorte=2*615,VOID=1373
         real,parameter :: rmax=30, pi=acos(-1.),rmin=0.001
         real :: abin,d,vol,vol2,rm,rand,minmass,maxmass,minsfr,maxsfr,abin2,ri,rad,r0
         integer :: bin,bin2,i
@@ -20,9 +20,9 @@ program first
        xbox=411.217
        ybox=162.1655
        zbox=453.0553 
-        ! xbox=403.896
-        ! ybox=459.8882
-        ! zbox=440.9021 
+       !  xbox=403.896
+       !  ybox=459.8882
+       !  zbox=440.9021 
 
         open(13,file='/mnt/is2/fstasys/ITV/base09/voids/voids_new.dat')
         do i=1,VOID-1

@@ -1,6 +1,6 @@
 module modulos
    implicit none
-   integer, parameter :: SNAPSHOT = 47     ! number of dump
+   integer, parameter :: SNAPSHOT = 47    ! number of dump
    integer, parameter :: FILES = 1         ! number of files per snapshot
    character(len=200), parameter :: path='/mnt/is2/dpaz/ITV/512_mass'
    !character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/S1050/out'
@@ -12,7 +12,7 @@ module modulos
    real*8    a
    real*8    redshift
    integer*4 fn,i,j,nstart,flag_sfr,flag_feedback
-   integer*4 N,Ntot
+   integer*8 N,Ntot
    integer(4),dimension(0:5) :: Newnpart
 
    integer*4 flag_cool, num_files
@@ -29,15 +29,16 @@ module modulos
    real :: prom1,prom2,prom3
        
    character(len=4) :: blckname 
+   character(len=8) :: blckname2 
    integer(kind=4) :: hwm
-   real(kind=4)  :: hwm2 
+   !integer*8 :: hwm
+   integer(kind=8)  :: hwm2 
    real :: xmin,ymin,zmin
    real :: xmax,ymax,zmax
    integer(4) :: i1,i2
 
    logical :: ilogic
 endmodule
-
 subroutine reader()
         use modulos
    write(snumber,'(I3)') SNAPSHOT
@@ -62,16 +63,16 @@ subroutine reader()
 
    !write(*,*)'leyendo ',blckname,hwm
    read (1) npart, massarr, a, redshift, flag_sfr,flag_feedback, nall,flag_cool, num_files, boxsize,omega_m,omega_l,unused
-   !write(*,*)npart
-   !write(*,*)massarr
-   !write(*,*)a, "  <---- a"
-   !write(*,*)redshift, "  <---- z"
-   !write(*,*)flag_sfr,flag_feedback,flag_cool, "  <---- flags"
-   !write(*,*)nall
-   !write(*,*)num_files , " <---- num_files"
-   !write(*,*)boxsize
-   !write(*,*)omega_m
-   !write(*,*)omega_l
+   write(*,*)npart
+   write(*,*)massarr
+   write(*,*)a, "  <---- a"
+   write(*,*)redshift, "  <---- z"
+   write(*,*)flag_sfr,flag_feedback,flag_cool, "  <---- flags"
+   write(*,*)nall
+   write(*,*)num_files , " <---- num_files"
+   write(*,*)boxsize
+   write(*,*)omega_m
+   write(*,*)omega_l
 
   ! close (1)
 
@@ -86,7 +87,11 @@ subroutine reader()
    ! The array PartPos(1:3,1:Ntot) will contain all these particles
    Ntot= sum(nall)
    write(*,*)"---------> ", Ntot
-
+   write(*,*)"---------> ", sum(nall)
+   write(*,*) (3*sum(nall)*4), '<--------- 3*sum(nall)*4 '
+   write(*,*) (3.0*Ntot*4.0), '<--------- 3*Ntot*4 '
+   
+   
    allocate(pos(3,Ntot))
    allocate(vel(3,Ntot))
    !allocate(id(Ntot))
@@ -95,11 +100,9 @@ subroutine reader()
    !allocate(dens(nall(0))) !+nall(4)))
    N=sum(npart)
 
-   print*, (3*sum(nall)*4), '<--------- 3*sum(nall)*4 '
-   
    !hwm contiene el numero de bytes del bloque de datos mas 8 bytes
-   read (1)blckname,hwm
-   print*, blckname, hwm
+   read (1)blckname, hwm2
+   print*, blckname, hwm2
    read (1)pos
         print*, 'los b deben ser', Ntot*4*3
    write(*,*)'leyendo ',blckname,hwm-8

@@ -1,10 +1,10 @@
-! COMPILAR CON modV.f90 
 program grid_mesh
         use modulos
         use OMP_lib
         implicit none
-        integer, parameter :: cell=100, vec=5,vec2=50 ,nd=2000
-        real, parameter :: box=200, rmax=13.0, rmin=0.0! elegir el lado del box que voy a armar
+        integer, parameter :: cell=100, vec=5,vec2=50 ,nd=2000,bines=20
+        real, parameter :: box=200e6, rmax=10e6, rmin=0! elegir el lado del box que voy a armar
+        real, parameter :: distmin=1, distmax=1e6
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
         real, allocatable :: distance(:)
@@ -19,19 +19,29 @@ program grid_mesh
         integer :: ndm, ngs, nst,k,nst2
         real,allocatable :: pos_st2(:,:)
         real,allocatable :: pos_st(:,:), pos_gs(:,:), pos_dm(:,:)
-        integer :: grid
-        xbox=411.2170 
-        ybox=162.1655 
-        zbox=453.0553 
-        xc=413.621475 - xbox + 250 -150  !estoy restando 150 para tener un box
-        yc=162.604601 - ybox + 250 -150  !mas chico de la resi, de 150**3 (maso) 
-        zc=448.953638 - zbox + 250 -150
- !xbox=403.8960 
- !ybox=459.8882
- !zbox=440.9021
- !xc=408.205481-xbox+250-150
- !yc=457.777839-ybox+250-150
- !zc=441.538681-zbox+250-150
+        integer :: grid,ibin
+        integer,dimension(bines) :: partbin
+        real ::abin0,radio
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
+  ! NECESITO CREAR UN BOX MAS CHICO PARA NO TENER CELDAS AL PEDO AL LOS COSTADOS
+  ! (DONDE ESTAN LAS TIDALES QUE NO ME INTERESAN) ENTONCES LO QUE HAGO ES CORRER
+  ! LAS PARTICULAS DE LA RESIMULACION Y EL CENTRO DEL BOX 150 MPC PARA DE ESTA 
+  ! MANERA TRABAJAR CON UN BOX DE 200 DE LADO
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
+ 
+  !      xbox=411.2170 
+  !      ybox=162.1655 
+  !      zbox=453.0553 
+  !      xc=413.621475 - xbox + 250 -150  !estoy restando 150 para tener un box
+  !      yc=162.604601 - ybox + 250 -150  !mas chico de la resi, de 150**3 (maso) 
+  !      zc=448.953638 - zbox + 250 -150
+ xbox=403.8960e6 
+ ybox=459.8882e6
+ zbox=440.9021e6
+ xc=408.205481e6-xbox+250e6-150e6
+ yc=457.777839e6-ybox+250e6-150e6
+ zc=441.538681e6-zbox+250e6-150e6
 
         abin = box/real(cell)
         allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
@@ -41,24 +51,24 @@ program grid_mesh
 
         allocate(pos_gs(3,nall(0)), pos_dm(3,nall(1)), pos_st(3,nall(4)))
         do i=1,nall(0)
-        pos_gs(1,i)=pos(1,i)-150
-        pos_gs(2,i)=pos(2,i)-150
-        pos_gs(3,i)=pos(3,i)-150
+        pos_gs(1,i)=pos(1,i)*1e6-150e6
+        pos_gs(2,i)=pos(2,i)*1e6-150e6
+        pos_gs(3,i)=pos(3,i)*1e6-150e6
         enddo   
         k=0
         do i=1+nall(0),nall(0)+nall(1)
         k=k+1
-        pos_dm(1,k)=pos(1,i)-150
-        pos_dm(2,k)=pos(2,i)-150
-        pos_dm(3,k)=pos(3,i)-150
+        pos_dm(1,k)=pos(1,i)*1e6-150e6
+        pos_dm(2,k)=pos(2,i)*1e6-150e6
+        pos_dm(3,k)=pos(3,i)*1e6-150e6
         enddo  
         k=0 
         do i=1+nall(0)+nall(1)+nall(2)+nall(3),nall(0)+nall(1)+nall(2)+nall(3)+nall(4)
         k=k+1
         !print*, pos(1,i)
-        pos_st(1,k)=pos(1,i)-150
-        pos_st(2,k)=pos(2,i)-150
-        pos_st(3,k)=pos(3,i)-150
+        pos_st(1,k)=pos(1,i)*1e6-150e6
+        pos_st(2,k)=pos(2,i)*1e6-150e6
+        pos_st(3,k)=pos(3,i)*1e6-150e6
         enddo   
         deallocate(pos,vel)
 
@@ -86,7 +96,7 @@ program grid_mesh
                 endif
         enddo
         allocate(pos_st2(3,k))
-        print*, 'gas particles in interests area:', k
+        print*, 'stars particles in interests area:', k
         nst2=k
         k=0
         do i=1,nst
@@ -108,23 +118,31 @@ program grid_mesh
      !*********** VECTOR DE DISTANCIAS ***************************
     ! allocate(distance(nst))
        write(*,*) 'VECINAS STARS'
-     open(12,file='vecinas_void_st.dat',status='unknown')
-       call vecina(nd,nst,pos_st,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st)!,distance)
+        abin0 = (log10(distmax)-log10(distmin))/real(bines)
+       call correlacion(nd,nst,pos_st,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st,distmin,distmax, &
+               bines,abin0,partbin)!,distance)
+     open(12,file='correlacion_st.dat',status='unknown')
+     print*, distmin, distmax
+     do i=1,bines
+                radio = 10**(i*abin0) + distmin
+                write(12,*) radio, partbin(i)
+
+     enddo
      close(12)
-       abin=box/real(cell)
+      ! abin=box/real(cell)
        write(*,*) 'VECINAS GAS'
-     open(12,file='vecinas_void_gs.dat',status='unknown')
-       call vecina(nd,ngs,pos_gs,vec2,nst2,pos_st2,abin,cell,box,tot_gs,head_gs,link_gs)!,distance)
-     close(12)
-       write(*,*) 'VECINAS DM'
-     open(12,file='vecinas_void_dm.dat',status='unknown')
-       call vecina(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm)!,distance)
-     close(12)
+     !open(12,file='correlacion_gs.dat',status='unknown')
+     !  call correlacion(nd,ngs,pos_gs,vec2,nst2,pos_st2,abin,cell,box,tot_gs,head_gs,link_gs)!,distance)
+     !close(12)
+     !  write(*,*) 'VECINAS DM'
+     !open(12,file='correlacion_dm.dat',status='unknown')
+     !  call correlacion(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm)!,distance)
+     !close(12)
        
     !enddo
     ! deallocate(distance)
 endprogram grid_mesh
-subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
+subroutine correlacion(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link,distmin,distmax,bines,abin0,partbin)!,d)
         implicit none
         integer :: i,j,k,m,cand,bxx,byy,bzz,u,p,l
         integer :: bx,by,bz,n,cell,vec,nd,ngs
@@ -136,21 +154,27 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
         integer,dimension(cell,cell,cell):: head, tot
         real,dimension(vec) :: dist
         integer :: vec0,o,q
-        real :: dist_vieja, dist_vieja2
+        integer :: ibin,bines
+        integer,dimension(bines) :: partbin
+        real :: distmin,distmax,lmin,lmax,abin0
         cand = 0
         !d    = 0
         l = 0 
+        lmin=log10(distmin)
+        lmax=log10(distmax)
+        partbin=0
   !$OMP PARALLEL DEFAULT (NONE) &
   !$OMP PRIVATE (i,bx,by,bz,x,y,z,j,k,m,u,p,bxx,byy,bzz, &
-  !$OMP cand,dist,l,x0,y0,z0,dx,dy,dz,r,vec0,o,q,dist_vieja,dist_vieja2) &
-  !$OMP SHARED (pos1,abin,tot,head,link,n,cell,vec,box,nd,pos2 )
+  !$OMP cand,dist,l,x0,y0,z0,dx,dy,dz,r,vec0,o,q,ibin) &
+  !$OMP SHARED (pos1,abin,tot,head,link,n,cell,vec,box,nd,pos2,lmin , &
+  !$OMP lmax,bines,partbin,abin0)
   !$OMP DO SCHEDULE (DYNAMIC)
         do i=1,n
         !write(*,*) ii
-                dist=999999
-                vec0=vec
+               ! dist=999999
+               ! vec0=vec
                 l=0
-                cand=0
+               ! cand=0
                 x = pos1(1,i)
                 y = pos1(2,i)
                 z = pos1(3,i)
@@ -197,36 +221,22 @@ subroutine vecina(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link)!,d)
                         dx=abs(x-x0)
                         dy=abs(y-y0)
                         dz=abs(z-z0)
-                        if (dx > box/2.) dx = box - dx
-                        if (dy > box/2.) dy = box - dy
-                        if (dz > box/2.) dz = box - dz
+                       ! if (dx > box/2.) dx = box - dx
+                       ! if (dy > box/2.) dy = box - dy
+                       ! if (dz > box/2.) dz = box - dz
 
                         r  = sqrt(dx**2+dy**2+dz**2)
-                        call ordenador(r,vec0,dist)
-      !--------------------------------------------------------------------------                  
-!                        if (r<dist(vec)) then
-!                                do o=1,vec0
-!                                if (r>dist(vec-o) .and. r<= dist(vec+1-o)) then        
-!                                        dist_vieja=dist(o)
-!                                        dist(o)=r
-!                                        do q=o+1,vec0
-!                                        dist_vieja2=dist(q)
-!                                        dist(q)=dist_vieja
-!                                        dist_vieja=dist_vieja2
-!                                        enddo
-!                                endif
-!                                enddo
-!                        endif        
-      !--------------------------------------------------------------------------                  
+                        r=log10(r)
+                       if (r>lmin .and. r<lmax) then
+                        ibin=int((r-lmin)/abin0)+1   
+                        partbin(ibin)=partbin(ibin)+1                 
+                       endif 
                         p = link(p)
                     enddo
                  enddo    
                   enddo    
                 enddo
                   l = 0
-                 ! d(i) = dist(vec) 
-                  write(12,*) x, y,z, dist(vec0), vec0 
-        !2          cand = 0
         enddo
    !$OMP END DO
    !$OMP BARRIER

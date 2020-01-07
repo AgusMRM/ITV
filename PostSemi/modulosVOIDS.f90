@@ -2,7 +2,7 @@ module modulos
    implicit none
    integer, parameter :: SNAPSHOT = 50     ! number of dump
    integer, parameter :: FILES = 1         ! number of files per snapshot
-   character(len=200), parameter :: path='/mnt/is2/dpaz/ITV/R1198/out'
+   character(len=200), parameter :: path='/mnt/is2/dpaz/ITV/S1373/out'
    !character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/S1050/out'
 
    character(len=200) :: filename, snumber, fnumber
@@ -99,6 +99,7 @@ subroutine reader()
    
    !hwm contiene el numero de bytes del bloque de datos mas 8 bytes
    read (1)blckname,hwm
+   print*, blckname, hwm
    read (1)pos
         print*, 'los b deben ser', Ntot*4*3
    write(*,*)'leyendo ',blckname,hwm-8

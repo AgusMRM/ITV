@@ -1,41 +1,40 @@
 module modulos
-   implicit none
-   integer, parameter :: SNAPSHOT = 47     ! number of dump
-   integer, parameter :: FILES = 1         ! number of files per snapshot
-   character(len=200), parameter :: path='/mnt/is2/dpaz/ITV/512_mass'
-   !character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/S1050/out'
+implicit none
+integer, parameter :: SNAPSHOT = 50     ! number of dump
+integer, parameter :: FILES = 1         ! number of files per snapshot
+character(len=200), parameter :: path='/mnt/is2/dpaz/ITV/R1198/out'
+!character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/S1050/out'
 
-   character(len=200) :: filename, snumber, fnumber
+character(len=200) :: filename, snumber, fnumber
 
-   integer(4),dimension(0:5) :: npart, nall
-   real(8),dimension(0:5)    :: massarr
-   real*8    a
-   real*8    redshift
-   integer*4 fn,i,j,nstart,flag_sfr,flag_feedback
-   integer*4 N,Ntot
-   integer(4),dimension(0:5) :: Newnpart
+integer(4),dimension(0:5) :: npart, nall
+real(8),dimension(0:5)    :: massarr
+real*8    a
+real*8    redshift
+integer*4 fn,i,j,nstart,flag_sfr,flag_feedback
+integer*4 Ntot
+integer(4),dimension(0:5) :: Newnpart
 
-   integer*4 flag_cool, num_files
-   real*8    boxsize
-   real*8 newbox
-   real*8    omega_m,omega_l
-   integer*4 unused(26)
+integer*4 flag_cool, num_files
+real*8    boxsize
+real*8 newbox
+real*8    omega_m,omega_l
+integer*4 unused(26)
 
-   real*4,allocatable    :: pos(:,:),vel(:,:)
-   integer*4,allocatable :: id(:),idch(:),idgn(:)
-   real*4, allocatable,dimension(:)    :: mass, u, dens, ne, &
-                                        nh,hsml,sfr,abvc,temp 
-   real*8 n0,mol,R,vx,vy,vz
-   real :: prom1,prom2,prom3
-       
-   character(len=4) :: blckname 
-   integer(kind=4) :: hwm
-   real(kind=4)  :: hwm2 
-   real :: xmin,ymin,zmin
-   real :: xmax,ymax,zmax
-   integer(4) :: i1,i2
+real*4,allocatable    :: pos(:,:),vel(:,:)
+integer*4,allocatable :: id(:),idch(:),idgn(:)
+real*4, allocatable,dimension(:)    :: mass, u, rho, ne, &
+                                nh,hsml,sfr,abvc,temp 
+real*8 n0,mol,R,vx,vy,vz
+real :: prom1,prom2,prom3
 
-   logical :: ilogic
+character(len=4) :: blckname 
+integer(kind=4) :: hwm
+real(kind=4)  :: hwm2 
+real :: xmin,ymin,zmin
+real :: xmax,ymax,zmax
+integer(4) :: i1,i2
+
 endmodule
 
 subroutine reader()
@@ -87,35 +86,39 @@ subroutine reader()
    Ntot= sum(nall)
    write(*,*)"---------> ", Ntot
 
-   allocate(pos(3,Ntot))
-   allocate(vel(3,Ntot))
+  ! allocate(pos(3,Ntot))
+ !  allocate(vel(3,Ntot))
    !allocate(id(Ntot))
    !allocate(mass(Ntot))
    !allocate(u(nall(0))) !+nall(4)))
    !allocate(dens(nall(0))) !+nall(4)))
-   N=sum(npart)
 
    print*, (3*sum(nall)*4), '<--------- 3*sum(nall)*4 '
-   
    !hwm contiene el numero de bytes del bloque de datos mas 8 bytes
+   
    read (1)blckname,hwm
-   print*, blckname, hwm
+   allocate(pos(3,int(hwm-8)/(3*4)))
+   if (sum(nall) /= int(hwm-8)/(3*4)) stop 'cuidado'
    read (1)pos
-        print*, 'los b deben ser', Ntot*4*3
    write(*,*)'leyendo ',blckname,hwm-8
+   
    read (1)blckname,hwm
+   allocate(vel(3,int(hwm-8)/(3*4)))
    write(*,*)'leyendo ',blckname,hwm-8
+   if (sum(nall) /= int(hwm-8)/(3*4)) stop 'cuidado'
    read (1) vel
+
    read (1)blckname,hwm
    write(*,*)'leyendo ',blckname,hwm-8
    allocate(id(int((hwm-8)/4)))
    read (1)id
-        
  
    read (1)blckname,hwm
    write(*,*)'leyendo ',blckname,hwm-8
    allocate(idch(int((hwm-8)/4)))
+   if( int((hwm-8)/4)/= sum(nall)) stop "guarda con las dimensiones"
    read (1)idch
+
    read (1)blckname,hwm
    write(*,*)'leyendo ',blckname,hwm-8
    allocate(idgn(int((hwm-8)/4)))
@@ -123,33 +126,41 @@ subroutine reader()
 
    read (1)blckname,hwm
    write(*,*)'leyendo ',blckname,hwm-8
-        print*, 'allocateo con ',int(real((hwm-8)/4.)-1)
+        print*, 'allocateo con ',int((hwm-8)/4)
    allocate(mass(int((hwm-8)/4)))
    read (1)mass
+   
    read (1)blckname,hwm
    write(*,*)'leyendo ',blckname,hwm-8
    allocate(u(int((hwm-8)/4)))
-   !write(*,*) 'allocate con', int(real(hwm-8)/4.)
    read (1)u
+   
    read (1)blckname,hwm
    write(*,*)'leyendo ',blckname,hwm-8
-   allocate(dens(int(hwm-8)/4))
-   read (1)dens
+   allocate(rho(int(hwm-8)/4))
+   print*, int(int(hwm-8)/4), nall(0)
+   if( int((hwm-8)/4)/= nall(0)) stop "guarda con las dimensiones"
+   read (1)rho
+   
    read (1)blckname,hwm
    allocate(ne(int(hwm-8)/4))
    read(1)ne
+  
    write(*,*)'leyendo ',blckname,hwm-8
    read (1)blckname,hwm
    allocate(nh(int(hwm-8)/4))
    read(1)nh
+   
    write(*,*)'leyendo ',blckname,hwm-8
    read (1)blckname,hwm
    allocate(hsml(int((hwm-8)/4)))
    read(1) hsml
+   
    write(*,*)'leyendo ',blckname,hwm-8
    read (1)blckname,hwm
    allocate(sfr(int((hwm-8)/4)))
    read(1) sfr
+   
    write(*,*)'leyendo ',blckname,hwm-8
    read (1)blckname,hwm
    allocate(abvc(int((hwm-8)/4)))
