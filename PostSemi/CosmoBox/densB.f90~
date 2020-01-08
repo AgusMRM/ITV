@@ -22,6 +22,12 @@ program grid_mesh
         allocate(tot_dm(cell,cell,cell), head_dm(cell,cell,cell))
         allocate(tot_st(cell,cell,cell), head_st(cell,cell,cell))
         call reader()
+        k=0
+        do i=1,nall(0)
+                if (sfr(i)>0) k=k+1
+        enddo
+        print*, k
+        stop
         allocate(link_gs(nall(0)),link_dm(nall(1)),link_st(nall(4)))
 
         ngs=nall(0)
