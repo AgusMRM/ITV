@@ -46,7 +46,7 @@ print*, rv,x,y,z
                 dmp = dmp + num_dm(i)
                 rad = i*abin+ri
                 vol2 = (4./3.)*pi*((10**(rad))**3-((10**(r0))**3))
-                vol  = (4./3.)*pi*((10**(i*abin+ri))**3) !-(10**ri)**3)
+                vol  = (4./3.)*pi*((10**(i*abin+ri))**3-(10**ri)**3)
                 write(10,*) 10**((i-.5)*abin+ri), dmp, vol,num_dm(i),vol2
                 r0 = rad
         enddo

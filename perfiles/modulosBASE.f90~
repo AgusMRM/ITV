@@ -1,9 +1,9 @@
 module modulos
    implicit none
-   integer, parameter :: SNAPSHOT = 50     ! number of dump
+   integer, parameter :: SNAPSHOT = 08     ! number of dump
    integer, parameter :: FILES = 1         ! number of files per snapshot
-   character(len=200), parameter :: path='/mnt/is2/dpaz/ITV/R1198/out'
-   !character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/S1050/out'
+   !character(len=200), parameter :: path='/mnt/is2/dpaz/ITV/S1373/out'
+   character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/base09/out'
 
    character(len=200) :: filename, snumber, fnumber
 
@@ -99,7 +99,6 @@ subroutine reader()
    
    !hwm contiene el numero de bytes del bloque de datos mas 8 bytes
    read (1)blckname,hwm
-   print*, blckname, hwm
    read (1)pos
         print*, 'los b deben ser', Ntot*4*3
    write(*,*)'leyendo ',blckname,hwm-8
@@ -112,48 +111,6 @@ subroutine reader()
    read (1)id
         
  
-   read (1)blckname,hwm
-   write(*,*)'leyendo ',blckname,hwm-8
-   allocate(idch(int((hwm-8)/4)))
-   read (1)idch
-   read (1)blckname,hwm
-   write(*,*)'leyendo ',blckname,hwm-8
-   allocate(idgn(int((hwm-8)/4)))
-   read (1)idgn
-
-   read (1)blckname,hwm
-   write(*,*)'leyendo ',blckname,hwm-8
-        print*, 'allocateo con ',int(real((hwm-8)/4.)-1)
-   allocate(mass(int((hwm-8)/4)))
-   read (1)mass
-   read (1)blckname,hwm
-   write(*,*)'leyendo ',blckname,hwm-8
-   allocate(u(int((hwm-8)/4)))
-   !write(*,*) 'allocate con', int(real(hwm-8)/4.)
-   read (1)u
-   read (1)blckname,hwm
-   write(*,*)'leyendo ',blckname,hwm-8
-   allocate(dens(int(hwm-8)/4))
-   read (1)dens
-   read (1)blckname,hwm
-   allocate(ne(int(hwm-8)/4))
-   read(1)ne
-   write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   allocate(nh(int(hwm-8)/4))
-   read(1)nh
-   write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   allocate(hsml(int((hwm-8)/4)))
-   read(1) hsml
-   write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   allocate(sfr(int((hwm-8)/4)))
-   read(1) sfr
-   write(*,*)'leyendo ',blckname,hwm-8
-   read (1)blckname,hwm
-   allocate(abvc(int((hwm-8)/4)))
-   read(1) abvc
 endsubroutine
 subroutine linkedlist(n,abin,cell,pos,head,tot,link)
         implicit none

@@ -1,10 +1,13 @@
-! COMPILAR CON modV.f90 
+! COMPILAR CON modV.f90
+! este es el mismo que densV.f90 pero trabaja con el box completo de 500 
+! (en vez de el de 200). Es para chequear que la bimodalidad no sea
+! un problema de bordes
 program grid_mesh
         use modulos
         use OMP_lib
         implicit none
-        integer, parameter :: cell=100, vec=5,vec2=200 ,nd=2000
-        real, parameter :: box=200, rmax=10.0, rmin=0.0! elegir el lado del box que voy a armar
+        integer, parameter :: cell=100, vec=5,vec2=50 ,nd=2000
+        real, parameter :: box=500, rmax=10.0, rmin=0.0! elegir el lado del box que voy a armar
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
         real, allocatable :: distance(:)
@@ -29,9 +32,9 @@ program grid_mesh
  xbox=403.8960 
  ybox=459.8882
  zbox=440.9021
- xc=408.205481-xbox+250-150
- yc=457.777839-ybox+250-150
- zc=441.538681-zbox+250-150
+ xc=408.205481-xbox+250
+ yc=457.777839-ybox+250
+ zc=441.538681-zbox+250
 
         abin = box/real(cell)
         allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
@@ -41,24 +44,24 @@ program grid_mesh
 
         allocate(pos_gs(3,nall(0)), pos_dm(3,nall(1)), pos_st(3,nall(4)))
         do i=1,nall(0)
-        pos_gs(1,i)=pos(1,i)-150
-        pos_gs(2,i)=pos(2,i)-150
-        pos_gs(3,i)=pos(3,i)-150
+        pos_gs(1,i)=pos(1,i)
+        pos_gs(2,i)=pos(2,i)
+        pos_gs(3,i)=pos(3,i)
         enddo   
         k=0
         do i=1+nall(0),nall(0)+nall(1)
         k=k+1
-        pos_dm(1,k)=pos(1,i)-150
-        pos_dm(2,k)=pos(2,i)-150
-        pos_dm(3,k)=pos(3,i)-150
+        pos_dm(1,k)=pos(1,i)
+        pos_dm(2,k)=pos(2,i)
+        pos_dm(3,k)=pos(3,i)
         enddo  
         k=0 
         do i=1+nall(0)+nall(1)+nall(2)+nall(3),nall(0)+nall(1)+nall(2)+nall(3)+nall(4)
         k=k+1
         !print*, pos(1,i)
-        pos_st(1,k)=pos(1,i)-150
-        pos_st(2,k)=pos(2,i)-150
-        pos_st(3,k)=pos(3,i)-150
+        pos_st(1,k)=pos(1,i)
+        pos_st(2,k)=pos(2,i)
+        pos_st(3,k)=pos(3,i)
         enddo   
         deallocate(pos,vel)
 

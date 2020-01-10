@@ -66,7 +66,7 @@ program first
                       !  mass_tot(bin) = mass_tot(bin) + mass(i)
                         mass_gs(bin) = mass_gs(bin) + mass(i)
                         call titaangle(pos(1,i),pos(2,i),pos(3,i),tita)
-                        call fiangle(pos(1,i),pos(2,i),tita)
+                        call fiangle(pos(1,i),pos(2,i),fi)
                         vr = (vel(1,i)-vx0)*sin(tita)*cos(fi) + &
                              (vel(2,i)-vy0)*sin(tita)*sin(fi) + (vel(3,i)-vz0)*cos(tita)
                         vel_gs(bin) = vel_gs(bin) + vr
