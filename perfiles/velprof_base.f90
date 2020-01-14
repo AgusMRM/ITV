@@ -3,7 +3,7 @@
 program first0
 !        use modulos
         implicit none
-        integer,parameter :: bines=40, halos=850366-16,VOID=1373
+        integer,parameter :: bines=20, halos=850366-16,VOID=1198
         real,parameter :: rmax=100,rmin=5, pi=acos(-1.)
         real :: abin,d,vol,rm, rand,minmass,maxmass,minsfr,maxsfr,abin2,rad,r0
         integer :: bin,bin2,i
@@ -57,9 +57,9 @@ print*, rv,x,y,z
                 dx=pos(1,i)-x
                 dy=pos(2,i)-y
                 dz=pos(3,i)-z
-                if (abs(dx)>250) dx=500-dx
-                if (abs(dy)>250) dy=500-dy
-                if (abs(dz)>250) dz=500-dz
+                if (abs(dx)>250) dx=500-abs(dx)
+                if (abs(dy)>250) dy=abs(dy)-500
+                if (abs(dz)>250) dz=500-abs(dz)
                 d=log10(sqrt(dx**2+dy**2+dz**2))
                 if ((d) < rm .and. d>ri) then
                 bin = int((d-ri)/abin) + 1
