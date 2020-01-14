@@ -3,8 +3,8 @@ program grid_mesh
         use modulos
         use OMP_lib
         implicit none
-        integer, parameter :: cell=100, vec=5,vec2=50 ,nd=2000
-        real, parameter :: box=200, rmax=10.0, rmin=0.0! elegir el lado del box que voy a armar
+        integer, parameter :: cell=100, vec=15,vec2=10 ,nd=2000
+        real, parameter :: box=200, rmax=30.0, rmin=25.0! elegir el lado del box que voy a armar
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
         real, allocatable :: distance(:)
@@ -109,7 +109,7 @@ program grid_mesh
     ! allocate(distance(nst))
        write(*,*) 'VECINAS STARS'
     ! open(12,file='vecinas_void_st.dat',status='unknown')
-      ! call vecina(nd,nst,pos_st,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st)!,distance)
+    !   call vecina(nd,nst,pos_st,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st)!,distance)
     ! close(12)
        abin=box/real(cell)
        write(*,*) 'VECINAS GAS'
