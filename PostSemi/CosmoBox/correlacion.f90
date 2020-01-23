@@ -2,9 +2,9 @@ program grid_mesh
         use modulos
         use OMP_lib
         implicit none
-        integer, parameter :: cell=100, vec=5,vec2=50 ,nd=2000,bines=20
-        real, parameter :: box=200, rmax=10, rmin=0! elegir el lado del box que voy a armar
-        real, parameter :: distmin=1, distmax=1
+        integer, parameter :: cell=200, vec=5,vec2=50 ,nd=2000,bines=20
+        real, parameter :: box=200, rmax=30, rmin=25! elegir el lado del box que voy a armar
+        real, parameter :: distmin=0.001, distmax=1
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
         real, allocatable :: distance(:)
@@ -20,7 +20,7 @@ program grid_mesh
         real,allocatable :: pos_st2(:,:)
         real,allocatable :: pos_st(:,:), pos_gs(:,:), pos_dm(:,:)
         integer :: grid,ibin
-        integer,dimension(bines) :: partbin
+        integer,dimension(bines) :: partbin_st, partbin_gs, partbin_dm
         real ::abin0,radio
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
   ! NECESITO CREAR UN BOX MAS CHICO PARA NO TENER CELDAS AL PEDO AL LOS COSTADOS
@@ -30,25 +30,24 @@ program grid_mesh
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
  
-  !      xbox=411.2170 
-  !      ybox=162.1655 
-  !      zbox=453.0553 
-  !      xc=413.621475 - xbox + 250 -150  !estoy restando 150 para tener un box
-  !      yc=162.604601 - ybox + 250 -150  !mas chico de la resi, de 150**3 (maso) 
-  !      zc=448.953638 - zbox + 250 -150
- xbox=403.8960 
- ybox=459.8882
- zbox=440.9021
- xc=408.205481-xbox+250-150
- yc=457.777839-ybox+250-150
- zc=441.538681-zbox+250-150
+        xbox=411.2170 
+        ybox=162.1655 
+        zbox=453.0553 
+        xc=413.621475 - xbox + 250 -150  !estoy restando 150 para tener un box
+        yc=162.604601 - ybox + 250 -150  !mas chico de la resi, de 150**3 (maso) 
+        zc=448.953638 - zbox + 250 -150
+ !xbox=403.8960 
+ !ybox=459.8882
+ !zbox=440.9021
+ !xc=408.205481-xbox+250-150
+ !yc=457.777839-ybox+250-150
+ !zc=441.538681-zbox+250-150
 
         abin = box/real(cell)
         allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
         allocate(tot_dm(cell,cell,cell), head_dm(cell,cell,cell))
         allocate(tot_st(cell,cell,cell), head_st(cell,cell,cell))
         call reader()
-
         allocate(pos_gs(3,nall(0)), pos_dm(3,nall(1)), pos_st(3,nall(4)))
         do i=1,nall(0)
         pos_gs(1,i)=pos(1,i)-150
@@ -97,7 +96,7 @@ program grid_mesh
         enddo
         allocate(pos_st2(3,k))
         print*, 'stars particles in interests area:', k
-        dpares = k*
+        !dpares = k*
         nst2=k
         k=0
         do i=1,nst
@@ -120,13 +119,21 @@ program grid_mesh
     ! allocate(distance(nst))
        write(*,*) 'VECINAS STARS'
         abin0 = (log10(distmax)-log10(distmin))/real(bines)
+        print*, 'ESTRELLAS READY'
        call correlacion(nd,nst,pos_st,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st,distmin,distmax, &
-               bines,abin0,partbin)!,distance)
+               bines,abin0,partbin_st)!,distance)
+        print*, 'GAS READY'
+       call correlacion(nd,ngs,pos_gs,vec2,nst2,pos_st2,abin,cell,box,tot_gs,head_gs,link_gs,distmin,distmax, &
+               bines,abin0,partbin_gs)!,distance)
+        print*, 'DM READY'
+       call correlacion(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
+               bines,abin0,partbin_dm)!,distance)
      open(12,file='correlacion_st.dat',status='unknown')
+        print*, abin0
      print*, distmin, distmax
      do i=1,bines
-                radio = 10**(i*abin0) + distmin
-                write(12,*) radio, partbin(i)
+                radio = 10**(i*abin0 + log10(distmin))
+                write(12,*) radio, partbin_st(i),partbin_gs(i),partbin_dm(i)
 
      enddo
      close(12)
@@ -228,8 +235,8 @@ subroutine correlacion(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link,distmi
 
                         r  = sqrt(dx**2+dy**2+dz**2)
                         r=log10(r)
-                       if (r>lmin .and. r<lmax) then
-                        ibin=int((r-lmin)/abin0)+1   
+                       if (r>log10(distmin) .and. r<log10(distmax)) then
+                        ibin=int((r-log10(distmin))/abin0)+1   
                         partbin(ibin)=partbin(ibin)+1                 
                        endif 
                         p = link(p)

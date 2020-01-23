@@ -4,7 +4,7 @@ program first
         use modulos
         implicit none
         real,parameter    :: masadm=0.0932880491
-        integer,parameter :: bines=15, VOID=1373, n=48
+        integer,parameter :: bines=20, VOID=1373, n=48
         real,parameter :: rmax=25, pi=acos(-1.),rmin=.3
         real :: abin,d,vol,vol2,rm,minmass,maxmass,minsfr,maxsfr,abin2,ri,rad,r0
         integer :: bin,bin2,ijac,ijack,nparticulas
