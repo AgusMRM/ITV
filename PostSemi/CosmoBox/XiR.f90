@@ -2,10 +2,11 @@ program grid_mesh
         use modulos
         use OMP_lib
         implicit none
-        integer, parameter :: cell=200, vec=5,vec2=50 ,nd=2000,bines=20
-        real, parameter :: box=200, rmax=10, rmin=0! elegir el lado del box que voy a armar
+        integer, parameter :: cell=125, vec=5,vec2=50
+        integer,parameter  :: nd=2000,bines=20,halos=10682-19!71417-19
+        real, parameter :: box=500, rmax=10, rmin=0! elegir el lado del box que voy a armar
        ! real, parameter :: distmin=0.001, distmax=4
-        real, parameter :: distmin=0.001, distmax=1
+        real*8, parameter :: distmin=1, distmax=4
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
         real, allocatable :: distance(:)
@@ -13,16 +14,20 @@ program grid_mesh
         integer,allocatable,dimension(:,:,:) :: tot_gs, head_gs
         integer,allocatable,dimension(:,:,:) :: tot_dm, head_dm
         integer,allocatable,dimension(:,:,:) :: tot_st, head_st
+        integer,allocatable,dimension(:,:,:) :: tot_hl, head_hl
         integer,allocatable :: link_gs(:)
         integer,allocatable :: link_dm(:)
         integer,allocatable :: link_st(:)
+        integer,allocatable :: link_hl(:)
         real :: abin,xbox,ybox,zbox,xc,yc,zc,d
-        integer :: ndm, ngs, nst,k,nst2
-        real,allocatable :: pos_st2(:,:)
-        real,allocatable :: pos_st(:,:), pos_gs(:,:), pos_dm(:,:)
+        integer :: ndm, ngs, nst,k,nst2,nhl2
+        real,allocatable :: pos_st2(:,:),pos_hl2(:,:)
+        real,allocatable :: pos_st(:,:), pos_gs(:,:), pos_dm(:,:),pos_hl(:,:)
         integer :: grid,ibin
-        integer,dimension(bines) :: partbin_st, partbin_gs, partbin_dm
-        real ::abin0,radio
+        integer*8,dimension(bines) :: partbin_st, partbin_gs, partbin_dm
+        integer*8,dimension(bines) :: partbin_hl
+        real*8 ::abin0,radio
+        integer*8,allocatable :: binpart(:,:)
         partbin_st=0
         partbin_gs=0
         partbin_dm=0
@@ -43,41 +48,43 @@ program grid_mesh
  xbox=403.8960 
  ybox=459.8882
  zbox=440.9021
- xc=408.205481-xbox+250-150
- yc=457.777839-ybox+250-150
- zc=441.538681-zbox+250-150
+ xc=408.205481-xbox+250
+ yc=457.777839-ybox+250
+ zc=441.538681-zbox+250
 
         abin = box/real(cell)
         allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
         allocate(tot_dm(cell,cell,cell), head_dm(cell,cell,cell))
         allocate(tot_st(cell,cell,cell), head_st(cell,cell,cell))
+        allocate(tot_hl(cell,cell,cell), head_hl(cell,cell,cell))
         call reader()
-        allocate(pos_gs(3,nall(0)), pos_dm(3,nall(1)), pos_st(3,nall(4)))
+        allocate(pos_gs(3,nall(0)), pos_dm(3,nall(1)), &
+                pos_st(3,nall(4)),pos_hl(3,halos))
         do i=1,nall(0)
-        pos_gs(1,i)=pos(1,i)-150
-        pos_gs(2,i)=pos(2,i)-150
-        pos_gs(3,i)=pos(3,i)-150
+        pos_gs(1,i)=pos(1,i)
+        pos_gs(2,i)=pos(2,i)
+        pos_gs(3,i)=pos(3,i)
         enddo   
         k=0
         do i=1+nall(0),nall(0)+nall(1)
         k=k+1
-        pos_dm(1,k)=pos(1,i)-150
-        pos_dm(2,k)=pos(2,i)-150
-        pos_dm(3,k)=pos(3,i)-150
+        pos_dm(1,k)=pos(1,i)
+        pos_dm(2,k)=pos(2,i)
+        pos_dm(3,k)=pos(3,i)
         enddo  
         k=0 
         do i=1+nall(0)+nall(1)+nall(2)+nall(3),nall(0)+nall(1)+nall(2)+nall(3)+nall(4)
         k=k+1
         !print*, pos(1,i)
-        pos_st(1,k)=pos(1,i)-150
-        pos_st(2,k)=pos(2,i)-150
-        pos_st(3,k)=pos(3,i)-150
+        pos_st(1,k)=pos(1,i)
+        pos_st(2,k)=pos(2,i)
+        pos_st(3,k)=pos(3,i)
         enddo   
         deallocate(pos,vel)
 
 
 
-        allocate(link_gs(nall(0)),link_dm(nall(1)),link_st(nall(4)))
+        allocate(link_gs(nall(0)),link_dm(nall(1)),link_st(nall(4)),link_hl(halos))
         ngs=nall(0)
         ndm=nall(1)
         nst=nall(4)
@@ -99,6 +106,7 @@ program grid_mesh
                 endif
         enddo
         allocate(pos_st2(3,k))
+        allocate(binpart(k,bines))
         print*, 'stars particles in interests area:', k
         !dpares = k*
         nst2=k
@@ -112,12 +120,45 @@ program grid_mesh
                         pos_st2(3,k)=pos_st(3,i)
                 endif
         enddo
+! AHORA SELECCIONO LOS HALOS
+!open(123,file='/mnt/is2/dpaz/ITV/S1373/halos/halos_50.ascii',status='unknown')
+open(123,file='/home/arodriguez/halosprueba/halos_0.0.ascii',status='unknown')
+        do i=1,19
+        read(123,*)
+        enddo
+        do i=1,halos
+                read(123,*) a,a,a,a,a,a,a,a,pos_hl(1,i),pos_hl(2,i),pos_hl(3,i)
+        enddo
+  close(123)
+        k=0
+        do i=1,halos
+                d=sqrt((pos_hl(1,i)-xc)**2+(pos_hl(2,i)-yc)**2+(pos_hl(3,i)-zc)**2)
+                if (d<rmax .and. d>rmin) then
+                        k=k+1
+                endif
+        enddo
+        allocate(pos_hl2(3,k))
+       ! allocate(binpart(k,bines))
+        print*, 'halos particles in interests area:', k
+        !dpares = k*
+        nhl2=k
+        k=0
+        do i=1,halos
+                d=sqrt((pos_hl(1,i)-xc)**2+(pos_hl(2,i)-yc)**2+(pos_hl(3,i)-zc)**2)
+                if (d<rmax .and. d>rmin) then
+                        k=k+1
+                        pos_hl2(1,k)=pos_hl(1,i)
+                        pos_hl2(2,k)=pos_hl(2,i)
+                        pos_hl2(3,k)=pos_hl(3,i)
+                endif
+        enddo        
    !     write(*,*) 'LiNKEANDO GAS'
    !     call linkedlist(ngs,abin,cell,pos_gs,head_gs,tot_gs,link_gs)
         write(*,*) 'LiNKEANDO DARMATE'
         call linkedlist(ndm,abin,cell,pos_dm,head_dm,tot_dm,link_dm)
         write(*,*) 'LiNKEANDO ESTRELLAs'
         call linkedlist(nst,abin,cell,pos_st,head_st,tot_st,link_st)
+        call linkedlist(halos,abin,cell,pos_hl,head_hl,tot_hl,link_hl)
      !************************************************************   
      !*********** VECTOR DE DISTANCIAS ***************************
     ! allocate(distance(nst))
@@ -134,15 +175,18 @@ program grid_mesh
      !  call correlacion(nd,ngs,pos_gs,vec2,nst2,pos_st2,abin,cell,box,tot_gs,head_gs,link_gs,distmin,distmax, &
      !          bines,abin0,partbin_gs)!,distance)
         print*, 'DM READY'
-      call correlacion(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
-              bines,abin0,partbin_dm)!,distance)
+     call correlacion(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
+             bines,abin0,partbin_dm)!,distance)
+      call correlacion(nd,ndm,pos_dm,vec2,nhl2,pos_hl2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
+              bines,abin0,partbin_hl)!,distance)
      open(12,file='correlacion_st.dat',status='unknown')
         print*, abin0
      print*, distmin, distmax
      do i=1,bines
-                !radio = 10**(i*abin0 + log10(distmin))
-                radio = (i*abin0 + distmin)
-                write(12,*) radio, partbin_st(i),partbin_gs(i),partbin_dm(i)
+                radio = 10**(i*abin0 + log10(distmin))
+               ! radio = (i*abin0 + distmin)
+                write(12,*) radio, partbin_st(i),partbin_gs(i),partbin_dm(i), &
+                                partbin_hl(i)
 
      enddo
      close(12)
@@ -163,28 +207,33 @@ subroutine correlacion(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link,distmi
         implicit none
         integer :: i,j,k,m,cand,bxx,byy,bzz,u,p,l
         integer :: bx,by,bz,n,cell,vec,nd,ngs
-        real :: x0,y0,z0,x,y,z,r,abin,box,dx,dy,dz
+        real*8 :: x0,y0,z0,x,y,z,r
+        real :: abin,box,dx,dy,dz
         real,dimension(3,n):: pos1
         real,dimension(3,ngs):: pos2
         integer,dimension(ngs) :: link
       !  real,dimension(n) :: d
         integer,dimension(cell,cell,cell):: head, tot
         real,dimension(vec) :: dist
+        integer*8,dimension(n,bines) ::binpart
         integer :: vec0,o,q
         integer :: ibin,bines
-        integer,dimension(bines) :: partbin
-        real :: distmin,distmax,lmin,lmax,abin0
+        integer*8 ::pares
+        integer*8,dimension(bines) :: partbin
+        real*8 :: distmin,distmax,lmin,lmax,abin0
         cand = 0
         !d    = 0
         l = 0 
         lmin=log10(distmin)
         lmax=log10(distmax)
         partbin=0
+        binpart=0
+        pares=0
   !$OMP PARALLEL DEFAULT (NONE) &
   !$OMP PRIVATE (i,bx,by,bz,x,y,z,j,k,m,u,p,bxx,byy,bzz, &
   !$OMP cand,dist,l,x0,y0,z0,dx,dy,dz,r,vec0,o,q,ibin) &
   !$OMP SHARED (pos1,abin,tot,head,link,n,cell,vec,box,nd,pos2,lmin , &
-  !$OMP lmax,bines,partbin,abin0)
+  !$OMP lmax,bines,partbin,abin0,distmin,distmax,binpart)
   !$OMP DO SCHEDULE (DYNAMIC)
         do i=1,n
         !write(*,*) ii
@@ -245,8 +294,9 @@ subroutine correlacion(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link,distmi
                         r  = sqrt(dx**2+dy**2+dz**2)
                         r=log10(r)
                        if (r>log10(distmin) .and. r<log10(distmax)) then
-                        ibin=int((r-log10(distmin))/abin0)+1   
-                        partbin(ibin)=partbin(ibin)+1                 
+                        ibin=int((r-log10(distmin))/abin0)+1  
+                        binpart(i,ibin)=binpart(i,ibin)+1 
+!                        partbin(ibin)=partbin(ibin)+1                 
                        endif 
                         p = link(p)
                     enddo
@@ -258,6 +308,14 @@ subroutine correlacion(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link,distmi
    !$OMP END DO
    !$OMP BARRIER
    !$OMP END PARALLEL
+   partbin=0     
+   do i=1,n
+        do j=1,bines
+                pares = binpart(i,j)
+                partbin(j)=partbin(j) + pares
+        enddo
+   enddo
+    
 endsubroutine        
 subroutine ordenador(r,vec,dist)
     implicit none

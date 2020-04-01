@@ -131,8 +131,6 @@ subroutine linkedlist(n,abin,cell,pos,head,tot,link)
                if (bz==0)     bz=cell
                if (bz==cell+1)bz=1
 
-               if (bz>cell) print*, bz
-               if (bz>cell) print*, i
                tot(bx,by,bz) = tot(bx,by,bz) + 1
                head(bx,by,bz)   = i
        enddo

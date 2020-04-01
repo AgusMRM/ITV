@@ -3,7 +3,8 @@ program grid_mesh
         use OMP_lib
         implicit none
         integer, parameter :: cell=200, vec=5,vec2=50 ,nd=2000,bines=20
-        real, parameter :: box=200, rmax=13, rmin=0! elegir el lado del box que voy a armar
+        real, parameter :: box=200, rmax=10, rmin=0! elegir el lado del box que voy a armar
+       ! real, parameter :: distmin=0.001, distmax=4
         real, parameter :: distmin=0.001, distmax=1
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
@@ -22,6 +23,9 @@ program grid_mesh
         integer :: grid,ibin
         integer,dimension(bines) :: partbin_st, partbin_gs, partbin_dm
         real ::abin0,radio
+        partbin_st=0
+        partbin_gs=0
+        partbin_dm=0
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
   ! NECESITO CREAR UN BOX MAS CHICO PARA NO TENER CELDAS AL PEDO AL LOS COSTADOS
   ! (DONDE ESTAN LAS TIDALES QUE NO ME INTERESAN) ENTONCES LO QUE HAGO ES CORRER
@@ -30,18 +34,18 @@ program grid_mesh
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
  
-        xbox=411.2170 
-        ybox=162.1655 
-        zbox=453.0553 
-        xc=413.621475 - xbox + 250 -150  !estoy restando 150 para tener un box
-        yc=162.604601 - ybox + 250 -150  !mas chico de la resi, de 150**3 (maso) 
-        zc=448.953638 - zbox + 250 -150
- !xbox=403.8960 
- !ybox=459.8882
- !zbox=440.9021
- !xc=408.205481-xbox+250-150
- !yc=457.777839-ybox+250-150
- !zc=441.538681-zbox+250-150
+  !      xbox=411.2170 
+  !      ybox=162.1655 
+  !      zbox=453.0553 
+  !      xc=413.621475 - xbox + 250 -150  !estoy restando 150 para tener un box
+  !      yc=162.604601 - ybox + 250 -150  !mas chico de la resi, de 150**3 (maso) 
+  !      zc=448.953638 - zbox + 250 -150
+ xbox=403.8960 
+ ybox=459.8882
+ zbox=440.9021
+ xc=408.205481-xbox+250-150
+ yc=457.777839-ybox+250-150
+ zc=441.538681-zbox+250-150
 
         abin = box/real(cell)
         allocate(tot_gs(cell,cell,cell), head_gs(cell,cell,cell))
@@ -108,8 +112,8 @@ program grid_mesh
                         pos_st2(3,k)=pos_st(3,i)
                 endif
         enddo
-        write(*,*) 'LiNKEANDO GAS'
-        call linkedlist(ngs,abin,cell,pos_gs,head_gs,tot_gs,link_gs)
+   !     write(*,*) 'LiNKEANDO GAS'
+   !     call linkedlist(ngs,abin,cell,pos_gs,head_gs,tot_gs,link_gs)
         write(*,*) 'LiNKEANDO DARMATE'
         call linkedlist(ndm,abin,cell,pos_dm,head_dm,tot_dm,link_dm)
         write(*,*) 'LiNKEANDO ESTRELLAs'
@@ -118,21 +122,26 @@ program grid_mesh
      !*********** VECTOR DE DISTANCIAS ***************************
     ! allocate(distance(nst))
        write(*,*) 'VECINAS STARS'
-        abin0 = (log10(distmax)-log10(distmin))/real(bines)
-        print*, 'ESTRELLAS READY'
-       call correlacion(nd,nst,pos_st,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st,distmin,distmax, &
-               bines,abin0,partbin_st)!,distance)
+        
+       
+       abin0 = (log10(distmax)-log10(distmin))/real(bines)
+       
+      
+       print*, 'ESTRELLAS READY'
+     ! call correlacion(nd,nst,pos_st,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st,distmin,distmax, &
+     !         bines,abin0,partbin_st)!,distance)
         print*, 'GAS READY'
-       call correlacion(nd,ngs,pos_gs,vec2,nst2,pos_st2,abin,cell,box,tot_gs,head_gs,link_gs,distmin,distmax, &
-               bines,abin0,partbin_gs)!,distance)
+     !  call correlacion(nd,ngs,pos_gs,vec2,nst2,pos_st2,abin,cell,box,tot_gs,head_gs,link_gs,distmin,distmax, &
+     !          bines,abin0,partbin_gs)!,distance)
         print*, 'DM READY'
-       call correlacion(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
-               bines,abin0,partbin_dm)!,distance)
+      call correlacion(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
+              bines,abin0,partbin_dm)!,distance)
      open(12,file='correlacion_st.dat',status='unknown')
         print*, abin0
      print*, distmin, distmax
      do i=1,bines
-                radio = 10**(i*abin0 + log10(distmin))
+                !radio = 10**(i*abin0 + log10(distmin))
+                radio = (i*abin0 + distmin)
                 write(12,*) radio, partbin_st(i),partbin_gs(i),partbin_dm(i)
 
      enddo
