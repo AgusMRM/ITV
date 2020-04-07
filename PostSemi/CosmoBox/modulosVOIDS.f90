@@ -3,7 +3,7 @@ module modulos
    integer, parameter :: SNAPSHOT = 50     ! number of dump
    integer, parameter :: FILES = 1         ! number of files per snapshot
    character(len=200), parameter :: path='/mnt/is2/dpaz/ITV/S1373/out'
-   !character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/S1050/out'
+!   character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/base09/out'
 
    character(len=200) :: filename, snumber, fnumber
 

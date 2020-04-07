@@ -2,11 +2,11 @@ program grid_mesh
         use modulos
         use OMP_lib
         implicit none
-        integer, parameter :: cell=50, vec=5,vec2=50
-        integer,parameter  :: nd=2000,bines=20,halos=10682-19!71417-19
-        real, parameter :: box=500, rmax=10, rmin=0! elegir el lado del box que voy a armar
+        integer, parameter :: cell=125, vec=5,vec2=50
+        integer,parameter  :: nd=2000,bines=20,halos=71417-19 !10682-19!
+        real, parameter :: box=500, rmax=20, rmin=0! elegir el lado del box que voy a armar
        ! real, parameter :: distmin=0.001, distmax=4
-        real*8, parameter :: distmin=1, distmax=10
+        real*8, parameter :: distmin=0.0001, distmax=1
         integer, dimension(cell,cell) :: tot, head
         !real*8,dimension(12232826) :: distance
         real, allocatable :: distance(:)
@@ -121,8 +121,8 @@ program grid_mesh
                 endif
         enddo
 ! AHORA SELECCIONO LOS HALOS
-!open(123,file='/mnt/is2/dpaz/ITV/S1373/halos/halos_50.ascii',status='unknown')
-open(123,file='/home/arodriguez/halosprueba/halos_0.0.ascii',status='unknown')
+open(123,file='/mnt/is2/dpaz/ITV/S1373/halos/halos_50.ascii',status='unknown')
+!open(123,file='/home/arodriguez/halosprueba/halos_0.0.ascii',status='unknown')
         do i=1,19
         read(123,*)
         enddo
@@ -175,10 +175,10 @@ open(123,file='/home/arodriguez/halosprueba/halos_0.0.ascii',status='unknown')
      !  call correlacion(nd,ngs,pos_gs,vec2,nst2,pos_st2,abin,cell,box,tot_gs,head_gs,link_gs,distmin,distmax, &
      !          bines,abin0,partbin_gs)!,distance)
         print*, 'DM READY'
- !     call correlacion(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
- !             bines,abin0,partbin_dm)!,distance)
-      call correlacion(nd,ndm,pos_dm,vec2,nhl2,pos_hl2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
-              bines,abin0,partbin_hl)!,distance)
+     call correlacion(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
+             bines,abin0,partbin_dm)!,distance)
+   !1   call correlacion(nd,halos,pos_hl,vec2,nhl2,pos_hl2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
+   !           bines,abin0,partbin_hl)!,distance)
      open(12,file='correlacion_st.dat',status='unknown')
         print*, abin0
      print*, distmin, distmax

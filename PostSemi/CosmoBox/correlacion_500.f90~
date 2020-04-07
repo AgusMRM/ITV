@@ -130,13 +130,12 @@ program grid_mesh
        
       
        print*, 'ESTRELLAS READY'
-      call correlacion(nd,nst,pos_st,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st,distmin,distmax, &
+     !  call correlacion(nd,nst,pos_st,vec,nst2,pos_st2,abin,cell,box,tot_st,head_st,link_st,distmin,distmax, &
      !         bines,abin0,partbin_st)!,distance)
-        print*, 'GAS READY'
      !  call correlacion(nd,ngs,pos_gs,vec2,nst2,pos_st2,abin,cell,box,tot_gs,head_gs,link_gs,distmin,distmax, &
      !          bines,abin0,partbin_gs)!,distance)
-        print*, 'DM READY'
-      call correlacion(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
+     !   print*, 'DM READY'
+       call correlacion(nd,ndm,pos_dm,vec2,nst2,pos_st2,abin,cell,box,tot_dm,head_dm,link_dm,distmin,distmax, &
               bines,abin0,partbin_dm)!,distance)
      open(12,file='correlacion_st.dat',status='unknown')
         print*, abin0
@@ -275,136 +274,3 @@ subroutine correlacion(nd,ngs,pos2,vec,n,pos1,abin,cell,box,tot,head,link,distmi
    enddo
     
 endsubroutine        
-subroutine ordenador(r,vec,dist)
-    implicit none
-    ! integer,parameter :: vec=3,n=20 
-    integer ::i,o,q,vec,activador
-    real,dimension(vec) ::dist
-    real :: r,dist_vieja, dist_vieja2
-   ! dist=99999
-    activador=1
-    if (r<dist(vec)) then
-            do o=1,vec-1      
-                if (r>dist(vec-o) .and. r<= dist(vec+1-o)) then   
-                   activador=0     
-                    dist_vieja=dist(vec-o)
-                    dist(vec-o)=r
-                    do q=vec-o,vec
-                    dist_vieja2=dist(q)
-                    dist(q)=dist_vieja
-                    dist_vieja=dist_vieja2
-                    enddo
-                    goto 4
-                endif
-            enddo
-      4      if (activador==1) then
-                    dist_vieja=dist(1)
-                dist(1)=r    
-                    do q=2,vec
-                    dist_vieja2=dist(q)
-                    dist(q)=dist_vieja
-                    dist_vieja=dist_vieja2
-                    enddo
-            endif    
-    endif   
-endsubroutine
-SUBROUTINE ORDEN(NELEM,ARREG)
-! -----------------------------------------------------
-!ORDENACION POR BURBUJA ("buble sort") de un arreglo
-! unidimensional, de menor a mayor.
-!
-! NELEM = Número de elementos del arreglo
-! ARREG = Arreglo unidimensional a ordenar
-! -----------------------------------------------------
-IMPLICIT NONE
-INTEGER :: NELEM
-REAL :: ARREG(*)
-!-----------------------------------------------------
-INTEGER:: I,J
-REAL:: AUX
-!-----------------------------------------------------
-IF (NELEM.LT.2) RETURN
-DO I=1,NELEM-1
-DO J=1,NELEM-I
-IF (ARREG(J).GT.ARREG(J+1)) THEN
-AUX = ARREG(J)
-ARREG(J) = ARREG(J+1)
-ARREG(J+1) = AUX
-ENDIF
-ENDDO
-ENDDO
-RETURN
-END
-SUBROUTINE sort(n,arr)
-      INTEGER n,M,NSTACK
-      REAL*8 arr(n)
-      PARAMETER (M=7,NSTACK=50)
-      INTEGER i,ir,j,jstack,k,l,istack(NSTACK)
-      REAL a,temp
-      jstack=0
-      l=1
-      ir=n
-1     if(ir-l.lt.M)then
-        do 12 j=l+1,ir
-          a=arr(j)
-          do 11 i=j-1,1,-1
-            if(arr(i).le.a)goto 2
-            arr(i+1)=arr(i)
-11        continue
-          i=0
-2         arr(i+1)=a
-12      continue
-        if(jstack.eq.0)return
-        ir=istack(jstack)
-        l=istack(jstack-1)
-        jstack=jstack-2
-      else
-        k=(l+ir)/2
-        temp=arr(k)
-        arr(k)=arr(l+1)
-        arr(l+1)=temp
-        if(arr(l+1).gt.arr(ir))then
-          temp=arr(l+1)
-          arr(l+1)=arr(ir)
-          arr(ir)=temp
-        endif
-        if(arr(l).gt.arr(ir))then
-          temp=arr(l)
-          arr(l)=arr(ir)
-          arr(ir)=temp
-        endif
-        if(arr(l+1).gt.arr(l))then
-          temp=arr(l+1)
-          arr(l+1)=arr(l)
-          arr(l)=temp
-        endif
-        i=l+1
-        j=ir
-        a=arr(l)
-3       continue
-          i=i+1
-        if(arr(i).lt.a)goto 3
-4       continue
-          j=j-1
-        if(arr(j).gt.a)goto 4
-        if(j.lt.i)goto 5
-        temp=arr(i)
-        arr(i)=arr(j)
-        arr(j)=temp
-        goto 3
-5       arr(l)=arr(j)
-        arr(j)=a
-        jstack=jstack+2
-        if(jstack.gt.NSTACK)pause 'NSTACK too small in sort'
-        if(ir-i+1.ge.j-l)then
-          istack(jstack)=ir
-          istack(jstack-1)=i
-          ir=j-1
-        else
-          istack(jstack)=j-1
-          istack(jstack-1)=l
-          l=i
-        endif
-      endif
-      goto 1
-      END
