@@ -1,16 +1,15 @@
 program PERFILGAS
         use modulos
         implicit none
-        integer,parameter:: bines=20, VOID=443
-        real,parameter :: rmax=35, rmin=2, pi=acos(-1.)
-        real, allocatable:: d(:),te(:)
+        integer,parameter:: bines=20, VOID=950
+        real,parameter :: rmax=25, rmin=7.76, pi=acos(-1.)
+        real*8, allocatable:: d(:),te(:)
         integer :: bin,tot
         integer*8,dimension(bines) :: p_difu, p_whim, p_cond, p_hot
         real :: xh,yhe,mu,mp,kcgs,vv,abin,rad,distancia
         real :: xbox,ybox,zbox,xc,yc,zc,vol,r0
-        real :: x,y,z ,rv      
-        abin=(log10(rmax)-log10(rmin))/real(bines)
-        print*, abin
+        real :: x,y,z ,rv,difu,whim,hot,cond      
+        abin=log10(rmax-rmin)/real(bines)
         call reader()
         allocate(d(nall(0)),te(nall(0)))
         
@@ -42,31 +41,35 @@ program PERFILGAS
                 mu = (1.0-yhe)/(1+yhe+ne(i))
                 te(i)=(5./3.-1.)*u(i)*vv*mu*mp/kcgs
                         if (te(i) <= 10**(5) .and. rho(i) < 116.24 .and. d(i) > rmin .and. d(i)<= rmax) then
-                                bin = int((log10(d(i))-log10(rmin))/abin) + 1 
+                                bin = int((log10(d(i))-log10(rmin))/abin) + 1
+                                if (bin==0) print*, i, nall(0), d(i),          (log10(d(i)-rmin)/abin)
+
                                 p_difu(bin) = p_difu(bin) + 1
                         elseif (te(i) <= 10**(5) .and. rho(i) >= 116.24 .and. d(i) > rmin .and. d(i)<= rmax) then
-                                bin = int((log10(d(i))-log10(rmin))/abin) + 1 
+                                bin = int((log10(d(i))-log10(rmin))/abin) + 1
                                 p_cond(bin) = p_cond(bin) + 1
                         elseif (te(i) > 10**(5) .and. rho(i) < 116.24 .and. d(i) > rmin .and. d(i)<= rmax) then
-                                bin = int((log10(d(i))-log10(rmin))/abin) + 1 
+                                bin = int((log10(d(i))-log10(rmin))/abin) + 1
                                 p_whim(bin) = p_whim(bin) + 1
                         elseif (te(i) > 10**(5) .and. rho(i) >= 116.24 .and. d(i) > rmin .and. d(i)<= rmax) then
-                                bin = int((log10(d(i))-log10(rmin))/abin) + 1 
+                                bin = int((log10(d(i))-log10(rmin))/abin) + 1
                                 p_hot(bin) = p_hot(bin) + 1
                         endif 
         enddo
         open(10,file='perfiles_FasesGAS.dat',status='unknown')
-        r0=rmin
+        r0=0
+        difu=0; cond=0; whim=0; hot=0; tot=0
         do i =1,bines
-                tot = p_difu(i) + p_cond(i) + p_whim(i) + p_hot(i)        
-                rad=10**((i)*abin+log10(rmin))
+        difu=difu + p_difu(i)
+        cond=cond + p_cond(i)
+        whim=whim + p_whim(i)
+        hot=hot + p_hot(i)
+                tot = tot + p_difu(i) + p_cond(i) + p_whim(i) + p_hot(i)        
               !  vol = (4./3.)*pi*(10**(i*abin)**3)
-                vol = (4./3.)*pi*(rad**3-r0**3)
-                write(10,*) rad, p_difu(i)/vol, p_cond(i)/vol, p_whim(i)/vol, p_hot(i)/vol, &
-                        sqrt(real(p_difu(i)))/vol, sqrt(real(p_cond(i)))/vol, sqrt(real(p_whim(i)))/vol, &
-                        sqrt(real(p_hot(i)))/vol, p_difu(i)/real(tot), &
-                        p_cond(i)/real(tot), p_whim(i)/real(tot), p_hot(i)/real(tot)
-                r0=rad 
+                vol = (4./3.)*pi*((10**(i*abin))**3-r0**3)
+                write(10,*) 10**((i-.5)*abin)+rmin,  &
+                        difu/real(tot),cond/real(tot), whim/real(tot), hot/real(tot)
+                r0= 10**(i*abin)
         enddo
         close(10)
 
