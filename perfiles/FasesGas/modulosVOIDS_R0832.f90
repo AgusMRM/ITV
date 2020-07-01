@@ -86,31 +86,31 @@ subroutine reader()
    Ntot= sum(nall)
    write(*,*)"---------> ", Ntot
 
-  ! allocate(pos(3,Ntot))
- !  allocate(vel(3,Ntot))
-   !allocate(id(Ntot))
-   !allocate(mass(Ntot))
-   !allocate(u(nall(0))) !+nall(4)))
-   !allocate(dens(nall(0))) !+nall(4)))
+   allocate(pos(3,Ntot))
+   allocate(vel(3,Ntot))
+   allocate(id(Ntot))
+   allocate(mass(Ntot))
+   allocate(u(nall(0))) !+nall(4)))
+   allocate(rho(nall(0))) !+nall(4)))
 
    print*, (3*sum(nall)*4), '<--------- 3*sum(nall)*4 '
    !hwm contiene el numero de bytes del bloque de datos mas 8 bytes
    
    read (1)blckname,hwm
-   allocate(pos(3,int(hwm-8)/(3*4)))
+  ! allocate(pos(3,int(hwm-8)/(3*4)))
    !if (sum(nall) /= int(hwm-8)/(3*4)) stop 'cuidado'
    read (1)pos
    write(*,*)'leyendo ',blckname,hwm-8
    
    read (1)blckname,hwm
-   allocate(vel(3,int(hwm-8)/(3*4)))
+  ! allocate(vel(3,int(hwm-8)/(3*4)))
    write(*,*)'leyendo ',blckname,hwm-8
    !if (sum(nall) /= int(hwm-8)/(3*4)) stop 'cuidado'
    read (1) vel
 
    read (1)blckname,hwm
    write(*,*)'leyendo ',blckname,hwm-8
-   allocate(id(int((hwm-8)/4)))
+  ! allocate(id(int((hwm-8)/4)))
    read (1)id
  
    read (1)blckname,hwm
