@@ -8,7 +8,7 @@ program first0
         real :: abin,d,vol,rm, rand,minmass,maxmass,minsfr,maxsfr,abin2,rad,r0
         integer :: bin,bin2
         integer :: dmp,gsp 
-        real :: x,y,z,rv,ri,vol2
+        real :: x,y,z,rv,ri,vol2,vx,vy,vz
         real,dimension(bines):: sf,hsml0
         real,dimension(bines):: wgth,mass_dm
         integer,dimension(bines):: num_gs,num_dm,num_st
@@ -20,7 +20,7 @@ print*, 'leo voids'
         read(13,*)
         enddo
 
-        read(13,*) rv,x,y,z
+        read(13,*) rv,x,y,z,vx,vy,vz
         close(13)
 print*, rv,x,y,z
   !-----------------------------------------------------------------------------
@@ -52,3 +52,29 @@ print*, rv,x,y,z
         enddo
         close(10)
 endprogram
+subroutine titaangle(x,y,z,tita)
+implicit none
+real :: x,y,z,tita,pi
+pi=atan(-1.)
+if (z>0) then
+        tita=atan(sqrt(x**2+y**2)/z)
+elseif (z==0) then
+        tita=pi/2.
+else    
+        tita=pi+atan(sqrt(x**2+y**2)/x)
+endif        
+endsubroutine        
+subroutine  fiangle(x,y,fi)
+implicit none
+real :: x,y,z,fi,pi
+pi=atan(-1.) 
+if (x>0 .and. y>0) then
+        fi=atan(y/x)
+elseif (x>0 .and. y<0) then        
+        fi=2*pi+atan(y/x)
+elseif (x==0) then
+        fi=pi/2.*sign(1.,y)
+else
+        fi=pi+atan(y/x)
+endif
+endsubroutine        

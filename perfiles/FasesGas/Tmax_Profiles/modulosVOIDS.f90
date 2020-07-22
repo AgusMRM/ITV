@@ -1,9 +1,9 @@
 module modulos
 implicit none
-integer, parameter :: SNAPSHOT = 50     ! number of dump
+integer, parameter :: SNAPSHOT = 37     ! number of dump
 integer, parameter :: FILES = 1         ! number of files per snapshot
-!character(len=200), parameter :: path='/mnt/is2/dpaz/ITV/S1373/out'
-character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/R1277/out'
+character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/R0976/out'
+!character(len=200), parameter :: path='/mnt/is2/fstasys/ITV/S1050/out'
 
 character(len=200) :: filename, snumber, fnumber
 
@@ -98,14 +98,14 @@ subroutine reader()
    
    read (1)blckname,hwm
    allocate(pos(3,int(hwm-8)/(3*4)))
-   if (sum(nall) /= int(hwm-8)/(3*4)) stop 'cuidado'
+   !if (sum(nall) /= int(hwm-8)/(3*4)) stop 'cuidado'
    read (1)pos
    write(*,*)'leyendo ',blckname,hwm-8
    
    read (1)blckname,hwm
    allocate(vel(3,int(hwm-8)/(3*4)))
    write(*,*)'leyendo ',blckname,hwm-8
-   if (sum(nall) /= int(hwm-8)/(3*4)) stop 'cuidado'
+   !if (sum(nall) /= int(hwm-8)/(3*4)) stop 'cuidado'
    read (1) vel
 
    read (1)blckname,hwm

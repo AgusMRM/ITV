@@ -1,7 +1,7 @@
 program first0
         implicit none
-        integer,parameter :: bines=30, VOID=832,halos=241587 -19  !106409 
-        real,parameter :: rmax=35,rmin=3, pi=acos(-1.),corte=1232
+        integer,parameter :: bines=30, VOID= 443,halos=172548 -19  !106409 
+        real,parameter :: rmax=3.5,rmin=.1, pi=acos(-1.),corte=100
         real :: abin,d,vol,rm, rand,minmass,maxmass,minsfr,maxsfr,abin2,rad,r0
         integer :: bin,bin2  
         integer :: dmp,gsp,i 
@@ -13,7 +13,7 @@ program first0
         integer,dimension(halos) :: pnum
   !-----------------------------------------------------------------------------    
  !open(24,file='/mnt/is2/fstasys/ITV/base09/rockstar/halos_0.5.ascii',status='unknown',action='read')
- open(24,file='/home/arodriguez/Doctorado/snap50/halos_ 832.ascii',status='unknown',action='read')
+ open(24,file='/home/arodriguez/Doctorado/snap50/halos_ 443.ascii',status='unknown',action='read')
  do i=1,19
         read(24,*)
  enddo
@@ -36,30 +36,27 @@ program first0
    close(13)
    write(*,*) x,y,z
   !-----------------------------------------------------------------------------
-        abin = (log10(rmax)-log10(rmin))/real(bines)        
+        abin = ((rmax*rv)-(rmin*rv))/real(bines)        
         num_dm  = 0
   !---------------------------------------------- DM ------------------------
         do i=1,halos
                 d=sqrt((pos(1,i)-xc)**2+(pos(2,i)-yc)**2+(pos(3,i)-zc)**2)
-                if (d < rmax .and. d>rmin .and. pnum(i)>= corte) then
-                bin = int((log10(d)-log10(rmin))/abin) + 1
+                if (d < rmax*rv .and. d>rmin*rv .and. pnum(i)>= corte) then
+                bin = int((d-rmin)/abin) + 1
                 num_dm(bin)  = num_dm(bin) + 1
                 endif
         enddo
    !---------------------------------------------------------------------     
         open(17,file='halosprofiles.dat',status='unknown')
         dmp = 0
-        r0=rmin
+        r0=rmin*rv
         ri=0
         do i=1,bines
                 dmp = dmp + num_dm(i)
-                rad=10**((i)*abin+log10(rmin))
-              !  vol2 = (4./3.)*pi*((10**(rad))**3-((10**(r0))**3))  ! ESTE ES
-         !       PARA EL DIFERENCIAL
-                vol  = (4./3.)*pi*(rad**3-rmin**3)
+                rad=i*abin+(rmin*rv)
+                vol  = (4./3.)*pi*(rad**3-(rmin*rv)**3)
                 vol2 = (4./3.)*pi*(rad**3-r0**3)
-                !write(17,*) ((i-.5)*abin+rmin), dmp, vol,num_dm(i),vol2
-                write(17,*) rad, dmp, vol,num_dm(i),vol2
+                write(17,*) ((i-.5)*abin+rmin*rv)/rv, dmp, vol,num_dm(i),vol2
                 r0 = rad
         enddo
         close(17)

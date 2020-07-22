@@ -3,7 +3,7 @@
 program first0
         use modulos
         implicit none
-        integer,parameter :: bines=20, VOID=1373
+        integer,parameter :: bines=20, VOID=1277
         real,parameter :: rmax=35,rmin=.5, pi=acos(-1.)
         real :: abin,d,vol,rm, rand,minmass,maxmass,minsfr,maxsfr,abin2,rad,r0
         integer :: bin,bin2
